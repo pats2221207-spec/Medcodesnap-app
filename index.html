@@ -168,8 +168,13 @@
     .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
     .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
 
-    .ghost-btn { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    /* BUTTON ROW */
+    .btn-row { display: flex; gap: 10px; align-items: center; }
+    .ghost-btn { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
     .ghost-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+    .founder-btn { flex: 2; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; white-space: nowrap; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 12px rgba(0,200,150,0.35); }
+    .founder-btn:hover { background: var(--teal-dark); transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,200,150,0.45); }
+    .founder-btn:active { transform: scale(0.985); }
 
     #resErr { background: #fff0f0; border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: #c0392b; display: none; line-height: 1.5; }
     #resErr.show { display: block; }
@@ -185,7 +190,7 @@
 
 <nav>
   <div class="logo">MEDCODESNAP</div>
-  <div class="badge">Early Access</div>
+  <div class="badge">Now Live</div>
 </nav>
 
 <div class="shell">
@@ -314,7 +319,11 @@
           </div>
         </div>
 
-        <button class="ghost-btn" onclick="reset()">Code another note →</button>
+        <div class="btn-row">
+          <button class="ghost-btn" onclick="reset()">Code another note →</button>
+          <a href="https://buy.stripe.com/7sY8wOgrHgWB2Uh822aAw01" target="_blank" class="founder-btn">🔒 Lock In Founder Price →</a>
+        </div>
+
       </div>
 
       <div id="resErr">
