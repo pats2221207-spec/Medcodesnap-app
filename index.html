@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MedCodeSnap — Try It Live</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:        #00C896;
+      --teal-dark:   #00a87e;
+      --teal-dim:    rgba(0,200,150,0.12);
+      --teal-border: rgba(0,200,150,0.28);
+      --slate:       #1e3d50;
+      --slate-mid:   #274d63;
+      --bg:          #f2f6f9;
+      --card:        #ffffff;
+      --text:        #112233;
+      --muted:       #607080;
+      --border:      #dce6ed;
+      --success-bg:  #edfaf5;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 52px; background: var(--slate);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+    }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--teal); letter-spacing: 0.06em; }
+    .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); border: 1px solid var(--teal-border); background: var(--teal-dim); padding: 3px 10px; border-radius: 20px; }
+
+    .shell { display: flex; height: 100vh; padding-top: 52px; }
+
+    /* LEFT */
+    .left { width: 46%; min-width: 360px; max-width: 520px; background: var(--slate); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
+
+    .left-top { padding: 28px 32px 22px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+    .left-top h1 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 6px; }
+    .left-top h1 em { color: var(--teal); font-style: normal; }
+    .left-top p { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
+
+    /* GATE */
+    #gateWrap { padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
+    .fl { display: flex; flex-direction: column; gap: 5px; }
+    .fl label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    .fl input, .fl select {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px; padding: 11px 13px; font-size: 14px; color: #fff;
+      font-family: 'Inter', sans-serif; outline: none;
+      transition: border-color 0.2s, background 0.2s; width: 100%; -webkit-appearance: none;
+    }
+    .fl input::placeholder { color: rgba(255,255,255,0.25); }
+    .fl input:focus, .fl select:focus { border-color: var(--teal); background: rgba(255,255,255,0.1); }
+    .fl input.err { border-color: #ff6b6b; }
+    .fl select option { background: var(--slate); color: #fff; }
+
+    #gateErr { font-size: 12px; color: #ff8a7a; background: rgba(255,100,80,0.12); border: 1px solid rgba(255,100,80,0.25); border-radius: 7px; padding: 9px 12px; display: none; }
+    #gateErr.show { display: block; }
+
+    .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
+    .btn-teal:hover { background: var(--teal-dark); }
+    .btn-teal:active { transform: scale(0.985); }
+    .btn-teal:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .gate-fine { font-size: 11px; color: rgba(255,255,255,0.25); text-align: center; line-height: 1.6; }
+
+    /* UPLOAD */
+    #uploadWrap { padding: 24px 32px; display: none; flex-direction: column; gap: 18px; flex: 1; }
+    #uploadWrap.show { display: flex; }
+
+    .welcome-pill { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); font-weight: 500; }
+
+    .drop-zone {
+      border: 2px dashed rgba(0,200,150,0.35); border-radius: 12px;
+      background: rgba(255,255,255,0.04); padding: 36px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--teal); background: rgba(0,200,150,0.07); }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { font-size: 32px; margin-bottom: 10px; }
+    .drop-zone h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .drop-zone p { font-size: 12px; color: rgba(255,255,255,0.38); line-height: 1.5; }
+    .fmt-row { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
+    .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
+
+    .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
+    .file-pill.show { display: flex; }
+    .fp-icon { font-size: 18px; }
+    .fp-info { flex: 1; }
+    .fp-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .fp-size { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 1px; }
+    .fp-rm { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
+    .fp-rm:hover { color: #fff; }
+
+    #analyzeBtn { display: none; }
+    #analyzeBtn.show { display: block; }
+
+    .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
+
+    .sync-blurb { margin: auto 32px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; display: none; }
+    .sync-blurb.show { display: block; }
+    .sync-blurb strong { color: rgba(255,255,255,0.65); }
+    .sync-blurb a { color: var(--teal); text-decoration: none; font-weight: 600; }
+    .sync-blurb a:hover { text-decoration: underline; }
+
+    /* RIGHT */
+    .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border); }
+
+    .right-head { padding: 22px 30px 16px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .right-head h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .right-head p { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+    .right-body { padding: 22px 30px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+    /* IDLE */
+    #idleState { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 32px 16px; }
+    .idle-ring { width: 58px; height: 58px; border-radius: 50%; background: var(--success-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    #idleState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    #idleState p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 240px; }
+    .how-steps { display: flex; flex-direction: column; gap: 9px; width: 100%; max-width: 280px; text-align: left; margin-top: 6px; }
+    .how-step { display: flex; align-items: flex-start; gap: 10px; }
+    .hn { width: 20px; height: 20px; min-width: 20px; background: var(--teal); border-radius: 50%; font-size: 10px; font-weight: 700; color: var(--slate); display: flex; align-items: center; justify-content: center; }
+    .ht { font-size: 12px; color: var(--muted); line-height: 1.5; padding-top: 2px; }
+
+    /* PROCESSING */
+    #procState { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 32px 16px; }
+    #procState.show { display: flex; }
+    .spinner { width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--teal); border-top-color: transparent; animation: rot 0.85s linear infinite; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    #procState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .psteps { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 250px; text-align: left; }
+    .ps { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--muted); padding: 7px 11px; border-radius: 7px; background: var(--card); border: 1px solid var(--border); transition: all 0.25s; }
+    .ps.on { border-color: var(--teal); color: var(--text); background: var(--success-bg); }
+    .ps.done { color: var(--teal-dark); }
+    .pd { width: 6px; height: 6px; min-width: 6px; border-radius: 50%; background: var(--border); transition: background 0.25s; }
+    .ps.on .pd, .ps.done .pd { background: var(--teal); }
+
+    /* RESULTS */
+    #resState { display: none; flex-direction: column; gap: 13px; }
+    #resState.show { display: flex; }
+
+    .ok-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+
+    .rc { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+    .rc-head { padding: 9px 15px; background: var(--slate); display: flex; align-items: center; gap: 7px; }
+    .rc-head span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    .rcdot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
+    .rc-body { padding: 13px 15px; }
+
+    .rf { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .rf:last-child { border-bottom: none; padding-bottom: 0; }
+    .rf:first-child { padding-top: 0; }
+    .rl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .rv { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
+    .rv.mono { font-family: 'Courier New', monospace; font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 5px; color: var(--teal-dark); font-weight: 700; display: inline-block; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+    .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
+
+    .ghost-btn { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .ghost-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+    #resErr { background: #fff0f0; border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: #c0392b; display: none; line-height: 1.5; }
+    #resErr.show { display: block; }
+
+    .foot { padding: 12px 30px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
+    .foot p { font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">MEDCODESNAP</div>
+  <div class="badge">Early Access</div>
+</nav>
+
+<div class="shell">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="left-top">
+      <h1>Clinical notes to<br><em>ICD-10 codes.</em><br>Instantly.</h1>
+      <p>Upload any clinical note — photo, scan, or PDF. Results appear on the right in seconds.</p>
+    </div>
+
+    <div id="gateWrap">
+      <div class="fl">
+        <label>Full Name *</label>
+        <input type="text" id="gName" placeholder="First and last name" autocomplete="name"/>
+      </div>
+      <div class="fl">
+        <label>Work Email *</label>
+        <input type="email" id="gEmail" placeholder="you@practice.com" autocomplete="email"/>
+      </div>
+      <div class="fl">
+        <label>Your Role *</label>
+        <select id="gRole">
+          <option value="" disabled selected>Select your role…</option>
+          <option>Medical Coder</option>
+          <option>Practice Manager</option>
+          <option>Nurse Practitioner</option>
+          <option>Physician</option>
+          <option>Billing Specialist</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div id="gateErr">Please complete all fields before continuing.</div>
+      <button class="btn-teal" onclick="unlock()">Access the Demo Tool →</button>
+      <p class="gate-fine">🔒 No credit card · Early access only · Use fictional notes only</p>
+    </div>
+
+    <div id="uploadWrap">
+      <div class="welcome-pill" id="welcomePill"></div>
+
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileIn" accept=".jpg,.jpeg,.png,.pdf" onchange="onFile(this)"/>
+        <div class="drop-icon">📋</div>
+        <h3>Drop your clinical note here</h3>
+        <p>Or click to browse — works with photos taken on your phone</p>
+        <div class="fmt-row">
+          <span class="fmt">JPG</span>
+          <span class="fmt">PNG</span>
+          <span class="fmt">PDF</span>
+        </div>
+      </div>
+
+      <div class="file-pill" id="filePill">
+        <div class="fp-icon">📄</div>
+        <div class="fp-info">
+          <div class="fp-name" id="fName">—</div>
+          <div class="fp-size" id="fSize">—</div>
+        </div>
+        <button class="fp-rm" onclick="clearFile()">✕</button>
+      </div>
+
+      <button class="btn-teal" id="analyzeBtn" onclick="analyze()">Analyze &amp; Extract Codes →</button>
+      <p class="upload-fine">⚠️ Early access demo — use fictional or fully de-identified notes only.</p>
+    </div>
+
+    <div class="sync-blurb" id="syncBlurb">
+      <strong>In the full product,</strong> your results sync automatically to Google Sheets, Excel, or export as a Word document — just like you'll see in the <a href="#" id="demoLink">demo video →</a>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="right-head">
+      <h2>Coding Results</h2>
+      <p id="rightSub">Enter your details on the left to get started.</p>
+    </div>
+
+    <div class="right-body">
+
+      <div id="idleState">
+        <div class="idle-ring">⚡</div>
+        <h3>Ready when you are</h3>
+        <p>Upload a clinical note on the left. Results appear here in seconds.</p>
+        <div class="how-steps">
+          <div class="how-step"><div class="hn">1</div><div class="ht">Enter your details to access the tool</div></div>
+          <div class="how-step"><div class="hn">2</div><div class="ht">Upload a note — photo, scan, or PDF</div></div>
+          <div class="how-step"><div class="hn">3</div><div class="ht">AI reads the note and assigns ICD-10-CM codes</div></div>
+          <div class="how-step"><div class="hn">4</div><div class="ht">Results appear here instantly</div></div>
+        </div>
+      </div>
+
+      <div id="procState">
+        <div class="spinner"></div>
+        <h3>Reading your note…</h3>
+        <div class="psteps">
+          <div class="ps on" id="ps1"><div class="pd"></div>Reading clinical note</div>
+          <div class="ps" id="ps2"><div class="pd"></div>Identifying diagnoses</div>
+          <div class="ps" id="ps3"><div class="pd"></div>Assigning ICD-10-CM codes</div>
+          <div class="ps" id="ps4"><div class="pd"></div>Preparing your results</div>
+        </div>
+      </div>
+
+      <div id="resState">
+        <div class="ok-bar">✅ Coding complete</div>
+
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>Patient Info</span></div>
+          <div class="rc-body">
+            <div class="rf"><div class="rl">Patient Name</div><div class="rv" id="rPt">—</div></div>
+            <div class="rf"><div class="rl">Record Key</div><div class="rv mono" id="rKey">—</div></div>
+            <div class="rf"><div class="rl">Date of Service</div><div class="rv" id="rDate">—</div></div>
+          </div>
+        </div>
+
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>Diagnoses</span></div>
+          <div class="rc-body">
+            <div class="rv" id="rDx" style="line-height:1.8;">—</div>
+          </div>
+        </div>
+
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>ICD-10-CM Codes</span></div>
+          <div class="rc-body">
+            <div class="chips" id="rCodes"></div>
+          </div>
+        </div>
+
+        <button class="ghost-btn" onclick="reset()">Code another note →</button>
+      </div>
+
+      <div id="resErr">
+        Something went wrong reading your note. Please make sure the image is clear and try again. If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
+      </div>
+
+    </div>
+
+    <div class="foot">
+      <p>Early access demo · Use fictional or de-identified notes only · Not HIPAA-compliant until full launch</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let user = {};
+  let file = null;
+
+  function unlock() {
+    const n = document.getElementById("gName").value.trim();
+    const e = document.getElementById("gEmail").value.trim();
+    const r = document.getElementById("gRole").value;
+    const ok = n && e && r && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+    ["gName","gEmail"].forEach(id => document.getElementById(id).classList.remove("err"));
+    document.getElementById("gateErr").classList.remove("show");
+
+    if (!ok) {
+      if (!n) document.getElementById("gName").classList.add("err");
+      if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) document.getElementById("gEmail").classList.add("err");
+      document.getElementById("gateErr").classList.add("show");
+      return;
+    }
+
+    user = { name: n, email: e, role: r };
+    document.getElementById("gateWrap").style.display = "none";
+    document.getElementById("uploadWrap").classList.add("show");
+    document.getElementById("syncBlurb").classList.add("show");
+    document.getElementById("welcomePill").textContent = `👋 Welcome, ${n}! Upload a fictional clinical note below to see it coded live.`;
+    document.getElementById("rightSub").textContent = "Upload a note on the left — results appear here.";
+  }
+
+  function onFile(input) {
+    const f = input.files[0];
+    if (!f) return;
+    file = f;
+    document.getElementById("fName").textContent = f.name;
+    document.getElementById("fSize").textContent = (f.size/1024).toFixed(1) + " KB";
+    document.getElementById("filePill").classList.add("show");
+    document.getElementById("analyzeBtn").classList.add("show");
+  }
+
+  function clearFile() {
+    file = null;
+    document.getElementById("fileIn").value = "";
+    document.getElementById("filePill").classList.remove("show");
+    document.getElementById("analyzeBtn").classList.remove("show");
+  }
+
+  const dz = document.getElementById("dropZone");
+  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+  dz.addEventListener("drop", e => {
+    e.preventDefault(); dz.classList.remove("over");
+    const f = e.dataTransfer.files[0];
+    if (f) { file = f; onFile({files:[f]}); }
+  });
+
+  async function analyze() {
+    if (!file) return;
+
+    document.getElementById("uploadWrap").classList.remove("show");
+    document.getElementById("syncBlurb").classList.remove("show");
+    document.getElementById("idleState").style.display = "none";
+    document.getElementById("procState").classList.add("show");
+    document.getElementById("resErr").classList.remove("show");
+    animateSteps();
+
+    try {
+      const b64 = await toB64(file);
+
+      const resp = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageData: b64,
+          mediaType: file.type || "image/jpeg"
+        })
+      });
+
+      if (!resp.ok) throw new Error("API error");
+      const result = await resp.json();
+      showResults(result);
+
+    } catch(err) {
+      console.error(err);
+      showError();
+    }
+  }
+
+  function animateSteps() {
+    ["ps1","ps2","ps3","ps4"].forEach((id,i) => {
+      setTimeout(() => {
+        if (i > 0) {
+          document.getElementById(`ps${i}`).classList.remove("on");
+          document.getElementById(`ps${i}`).classList.add("done");
+        }
+        document.getElementById(id).classList.add("on");
+      }, i * 1800);
+    });
+  }
+
+  function showResults(d) {
+    document.getElementById("procState").classList.remove("show");
+    document.getElementById("rPt").textContent   = d.patient_name || "NOT FOUND";
+    document.getElementById("rKey").textContent  = d.record_key   || "NOT FOUND";
+    document.getElementById("rDate").textContent = d.note_date    || "NOT FOUND";
+
+    const dxs = (d.diagnoses_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
+    document.getElementById("rDx").innerHTML = dxs.length
+      ? dxs.map((dx,i)=>`<div style="padding:2px 0">${i+1}. ${dx}</div>`).join("")
+      : "NOT FOUND";
+
+    const codes = (d.icd10_codes_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
+    document.getElementById("rCodes").innerHTML = codes.length
+      ? codes.map(c=>`<span class="chip">${c}</span>`).join("")
+      : `<span style="color:var(--muted);font-size:13px">NOT FOUND</span>`;
+
+    document.getElementById("resState").classList.add("show");
+    document.getElementById("syncBlurb").classList.add("show");
+  }
+
+  function showError() {
+    document.getElementById("procState").classList.remove("show");
+    document.getElementById("resErr").classList.add("show");
+    document.getElementById("uploadWrap").classList.add("show");
+    document.getElementById("syncBlurb").classList.add("show");
+  }
+
+  function reset() {
+    file = null;
+    document.getElementById("fileIn").value = "";
+    document.getElementById("filePill").classList.remove("show");
+    document.getElementById("analyzeBtn").classList.remove("show");
+    document.getElementById("resState").classList.remove("show");
+    document.getElementById("resErr").classList.remove("show");
+    document.getElementById("idleState").style.display = "";
+    document.getElementById("uploadWrap").classList.add("show");
+    document.getElementById("welcomePill").textContent = `👋 Welcome back, ${user.name}! Upload another note below.`;
+    ["ps1","ps2","ps3","ps4"].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove("on","done");
+    });
+    document.getElementById("ps1").classList.add("on");
+  }
+
+  function toB64(f) {
+    return new Promise((res,rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(",")[1]);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+  }
+
+  ["gName","gEmail"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", e => { if(e.key==="Enter") unlock(); });
+  });
+</script>
+</body>
+</html>
