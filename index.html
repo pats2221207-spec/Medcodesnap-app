@@ -45,7 +45,6 @@
 
     /* LEFT */
     .left { width: 46%; min-width: 360px; max-width: 520px; background: var(--slate); display: flex; flex-direction: column; overflow-y: auto; flex-shrink: 0; }
-
     .left-top { padding: 28px 32px 22px; border-bottom: 1px solid rgba(255,255,255,0.07); }
     .left-top h1 { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: #fff; line-height: 1.3; margin-bottom: 6px; }
     .left-top h1 em { color: var(--teal); font-style: normal; }
@@ -78,7 +77,6 @@
     /* UPLOAD */
     #uploadWrap { padding: 24px 32px; display: none; flex-direction: column; gap: 18px; flex: 1; }
     #uploadWrap.show { display: flex; }
-
     .welcome-pill { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); font-weight: 500; }
 
     .drop-zone {
@@ -105,7 +103,6 @@
 
     #analyzeBtn { display: none; }
     #analyzeBtn.show { display: block; }
-
     .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
 
     .sync-blurb { margin: auto 32px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; display: none; }
@@ -116,11 +113,9 @@
 
     /* RIGHT */
     .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border); }
-
     .right-head { padding: 22px 30px 16px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .right-head h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
     .right-head p { font-size: 12px; color: var(--muted); margin-top: 3px; }
-
     .right-body { padding: 22px 30px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
 
     /* IDLE */
@@ -149,22 +144,18 @@
     /* RESULTS */
     #resState { display: none; flex-direction: column; gap: 13px; }
     #resState.show { display: flex; }
-
     .ok-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 500; display: flex; align-items: center; gap: 8px; }
-
     .rc { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
     .rc-head { padding: 9px 15px; background: var(--slate); display: flex; align-items: center; gap: 7px; }
     .rc-head span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
     .rcdot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
     .rc-body { padding: 13px 15px; }
-
     .rf { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border); }
     .rf:last-child { border-bottom: none; padding-bottom: 0; }
     .rf:first-child { padding-top: 0; }
     .rl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
     .rv { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
     .rv.mono { font-family: 'Courier New', monospace; font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 5px; color: var(--teal-dark); font-weight: 700; display: inline-block; }
-
     .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
     .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
 
@@ -181,6 +172,41 @@
 
     .foot { padding: 12px 30px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
     .foot p { font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
+
+    /* FEEDBACK BUTTON */
+    .feedback-fab {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--slate); color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 24px;
+      padding: 8px 16px; font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .feedback-fab:hover { background: var(--slate-mid); color: #fff; border-color: var(--teal-border); }
+    .feedback-fab .fab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+
+    /* FEEDBACK MODAL */
+    .fb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .fb-overlay.show { display: flex; }
+    .fb-modal { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .fb-modal h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .fb-modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .fb-type-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .fb-type { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+    .fb-type:hover, .fb-type.active { background: var(--teal-dim); border-color: var(--teal-border); color: var(--teal-dark); }
+    .fb-textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text); resize: none; height: 110px; outline: none; transition: border-color 0.2s; }
+    .fb-textarea:focus { border-color: var(--teal); }
+    .fb-textarea::placeholder { color: var(--muted); }
+    .fb-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .fb-cancel { flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+    .fb-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .fb-send { flex: 2; background: var(--teal); border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; color: var(--slate); cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.18s; }
+    .fb-send:hover { background: var(--teal-dark); }
+    .fb-thanks { text-align: center; padding: 12px 0 4px; }
+    .fb-thanks .fb-check { font-size: 32px; margin-bottom: 10px; }
+    .fb-thanks h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .fb-thanks p { font-size: 13px; color: var(--muted); }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
@@ -230,7 +256,6 @@
 
     <div id="uploadWrap">
       <div class="welcome-pill" id="welcomePill"></div>
-
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileIn" accept=".jpg,.jpeg,.png,.pdf" onchange="onFile(this)"/>
         <div class="drop-icon">📋</div>
@@ -242,7 +267,6 @@
           <span class="fmt">PDF</span>
         </div>
       </div>
-
       <div class="file-pill" id="filePill">
         <div class="fp-icon">📄</div>
         <div class="fp-info">
@@ -251,7 +275,6 @@
         </div>
         <button class="fp-rm" onclick="clearFile()">✕</button>
       </div>
-
       <button class="btn-teal" id="analyzeBtn" onclick="analyze()">Analyze &amp; Extract Codes →</button>
       <p class="upload-fine">⚠️ Early access demo — use fictional or fully de-identified notes only.</p>
     </div>
@@ -267,9 +290,7 @@
       <h2>Coding Results</h2>
       <p id="rightSub">Enter your details on the left to get started.</p>
     </div>
-
     <div class="right-body">
-
       <div id="idleState">
         <div class="idle-ring">⚡</div>
         <h3>Ready when you are</h3>
@@ -281,7 +302,6 @@
           <div class="how-step"><div class="hn">4</div><div class="ht">Results appear here instantly</div></div>
         </div>
       </div>
-
       <div id="procState">
         <div class="spinner"></div>
         <h3>Reading your note…</h3>
@@ -292,10 +312,8 @@
           <div class="ps" id="ps4"><div class="pd"></div>Preparing your results</div>
         </div>
       </div>
-
       <div id="resState">
         <div class="ok-bar">✅ Coding complete</div>
-
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Patient Info</span></div>
           <div class="rc-body">
@@ -304,34 +322,27 @@
             <div class="rf"><div class="rl">Date of Service</div><div class="rv" id="rDate">—</div></div>
           </div>
         </div>
-
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Diagnoses</span></div>
           <div class="rc-body">
             <div class="rv" id="rDx" style="line-height:1.8;">—</div>
           </div>
         </div>
-
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>ICD-10-CM Codes</span></div>
           <div class="rc-body">
             <div class="chips" id="rCodes"></div>
           </div>
         </div>
-
         <div class="btn-row">
           <button class="ghost-btn" onclick="reset()">Code another note →</button>
           <a href="https://buy.stripe.com/7sY8wOgrHgWB2Uh822aAw01" target="_blank" class="founder-btn">🔒 Lock In Founder Price →</a>
         </div>
-
       </div>
-
       <div id="resErr">
         Something went wrong reading your note. Please make sure the image is clear and try again. If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
       </div>
-
     </div>
-
     <div class="foot">
       <p>Early access demo · Use fictional or de-identified notes only · Not HIPAA-compliant until full launch</p>
     </div>
@@ -339,26 +350,55 @@
 
 </div>
 
+<!-- FEEDBACK BUTTON -->
+<button class="feedback-fab" onclick="openFeedback()">
+  <span class="fab-dot"></span> Share Feedback
+</button>
+
+<!-- FEEDBACK MODAL -->
+<div class="fb-overlay" id="fbOverlay" onclick="closeFeedbackOutside(event)">
+  <div class="fb-modal" id="fbModal">
+    <div id="fbForm">
+      <h3>Share your feedback 💬</h3>
+      <p>Spotted something? Have a suggestion? We read every message.</p>
+      <div class="fb-type-row">
+        <span class="fb-type active" onclick="selectType(this, 'Bug')">🐛 Bug</span>
+        <span class="fb-type" onclick="selectType(this, 'Suggestion')">💡 Suggestion</span>
+        <span class="fb-type" onclick="selectType(this, 'Compliment')">⭐ Compliment</span>
+        <span class="fb-type" onclick="selectType(this, 'Other')">💬 Other</span>
+      </div>
+      <textarea class="fb-textarea" id="fbText" placeholder="Tell us what you experienced or what could be better…"></textarea>
+      <div class="fb-actions">
+        <button class="fb-cancel" onclick="closeFeedback()">Cancel</button>
+        <button class="fb-send" onclick="sendFeedback()">Send Feedback →</button>
+      </div>
+    </div>
+    <div id="fbThanks" class="fb-thanks" style="display:none;">
+      <div class="fb-check">✅</div>
+      <h4>Thank you!</h4>
+      <p>Your feedback has been sent to Patty directly. It means a lot.</p>
+    </div>
+  </div>
+</div>
+
 <script>
   let user = {};
   let file = null;
+  let fbType = 'Bug';
 
   function unlock() {
     const n = document.getElementById("gName").value.trim();
     const e = document.getElementById("gEmail").value.trim();
     const r = document.getElementById("gRole").value;
     const ok = n && e && r && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-
     ["gName","gEmail"].forEach(id => document.getElementById(id).classList.remove("err"));
     document.getElementById("gateErr").classList.remove("show");
-
     if (!ok) {
       if (!n) document.getElementById("gName").classList.add("err");
       if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) document.getElementById("gEmail").classList.add("err");
       document.getElementById("gateErr").classList.add("show");
       return;
     }
-
     user = { name: n, email: e, role: r };
     document.getElementById("gateWrap").style.display = "none";
     document.getElementById("uploadWrap").classList.add("show");
@@ -395,30 +435,22 @@
 
   async function analyze() {
     if (!file) return;
-
     document.getElementById("uploadWrap").classList.remove("show");
     document.getElementById("syncBlurb").classList.remove("show");
     document.getElementById("idleState").style.display = "none";
     document.getElementById("procState").classList.add("show");
     document.getElementById("resErr").classList.remove("show");
     animateSteps();
-
     try {
       const b64 = await toB64(file);
-
       const resp = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageData: b64,
-          mediaType: file.type || "image/jpeg"
-        })
+        body: JSON.stringify({ imageData: b64, mediaType: file.type || "image/jpeg" })
       });
-
       if (!resp.ok) throw new Error("API error");
       const result = await resp.json();
       showResults(result);
-
     } catch(err) {
       console.error(err);
       showError();
@@ -442,17 +474,14 @@
     document.getElementById("rPt").textContent   = d.patient_name || "NOT FOUND";
     document.getElementById("rKey").textContent  = d.record_key   || "NOT FOUND";
     document.getElementById("rDate").textContent = d.note_date    || "NOT FOUND";
-
     const dxs = (d.diagnoses_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
     document.getElementById("rDx").innerHTML = dxs.length
       ? dxs.map((dx,i)=>`<div style="padding:2px 0">${i+1}. ${dx}</div>`).join("")
       : "NOT FOUND";
-
     const codes = (d.icd10_codes_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
     document.getElementById("rCodes").innerHTML = codes.length
       ? codes.map(c=>`<span class="chip">${c}</span>`).join("")
       : `<span style="color:var(--muted);font-size:13px">NOT FOUND</span>`;
-
     document.getElementById("resState").classList.add("show");
     document.getElementById("syncBlurb").classList.add("show");
   }
@@ -493,6 +522,41 @@
   ["gName","gEmail"].forEach(id => {
     document.getElementById(id).addEventListener("keydown", e => { if(e.key==="Enter") unlock(); });
   });
+
+  // FEEDBACK
+  function openFeedback() {
+    document.getElementById("fbOverlay").classList.add("show");
+    document.getElementById("fbForm").style.display = "block";
+    document.getElementById("fbThanks").style.display = "none";
+    document.getElementById("fbText").value = "";
+  }
+
+  function closeFeedback() {
+    document.getElementById("fbOverlay").classList.remove("show");
+  }
+
+  function closeFeedbackOutside(e) {
+    if (e.target === document.getElementById("fbOverlay")) closeFeedback();
+  }
+
+  function selectType(el, type) {
+    fbType = type;
+    document.querySelectorAll(".fb-type").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+  }
+
+  function sendFeedback() {
+    const msg = document.getElementById("fbText").value.trim();
+    if (!msg) { document.getElementById("fbText").focus(); return; }
+    const userName = user.name || "Anonymous";
+    const userEmail = user.email || "unknown";
+    const subject = encodeURIComponent(`MedCodeSnap Feedback: ${fbType}`);
+    const body = encodeURIComponent(`Type: ${fbType}\nFrom: ${userName} (${userEmail})\n\n${msg}`);
+    window.open(`mailto:patty@medcodesnap.com?subject=${subject}&body=${body}`);
+    document.getElementById("fbForm").style.display = "none";
+    document.getElementById("fbThanks").style.display = "block";
+    setTimeout(closeFeedback, 3000);
+  }
 </script>
 </body>
 </html>
