@@ -94,13 +94,15 @@
 
     /* SAMPLE NOTE LINK */
     .sample-note-link {
-      display: block; background: none; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
-      color: var(--teal); text-align: center; text-decoration: underline;
-      text-decoration-color: transparent; padding: 2px 0; margin: -4px 0 0;
-      transition: text-decoration-color 0.18s, color 0.18s; align-self: center;
+      display: block; background: transparent; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+      color: var(--teal); text-align: center; text-decoration: none;
+      border: 1.5px solid var(--teal-border); border-radius: 8px;
+      padding: 9px 14px; margin: -2px 0 0; align-self: center;
+      transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
     }
-    .sample-note-link:hover { text-decoration-color: var(--teal); color: var(--teal-dark); }
+    .sample-note-link:hover { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-dark); }
+    .sample-note-link:active { transform: scale(0.985); }
 
     .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
     .file-pill.show { display: flex; }
