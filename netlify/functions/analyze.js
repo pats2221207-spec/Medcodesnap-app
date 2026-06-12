@@ -20,6 +20,51 @@ Required fields:
 
 If any field cannot be found, use "NOT FOUND".`;
 
+    const isTextNote = mediaType === "text/plain";
+
+    let messages;
+
+    if (isTextNote) {
+      // .txt uploads (e.g. the "Try a Sample Note" feature) — read the note
+      // text directly and send it to OpenAI as plain text, skipping the
+      // image/vision processing path entirely.
+      const noteText = Buffer.from(imageData, "base64").toString("utf-8");
+
+      messages = [
+        {
+          role: "system",
+          content: "You are an expert medical coder. Return only raw JSON, no markdown, no backticks."
+        },
+        {
+          role: "user",
+          content: `${PROMPT}\n\nCLINICAL NOTE TEXT:\n${noteText}`
+        }
+      ];
+    } else {
+      messages = [
+        {
+          role: "system",
+          content: "You are an expert medical coder. Return only raw JSON, no markdown, no backticks."
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${mediaType};base64,${imageData}`,
+                detail: "auto"
+              }
+            },
+            {
+              type: "text",
+              text: PROMPT
+            }
+          ]
+        }
+      ];
+    }
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -30,28 +75,7 @@ If any field cannot be found, use "NOT FOUND".`;
         model: "gpt-4o",
         max_tokens: 1024,
         response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "system",
-            content: "You are an expert medical coder. Return only raw JSON, no markdown, no backticks."
-          },
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${mediaType};base64,${imageData}`,
-                  detail: "auto"
-                }
-              },
-              {
-                type: "text",
-                text: PROMPT
-              }
-            ]
-          }
-        ]
+        messages
       })
     });
 
