@@ -237,7 +237,26 @@
       .sn-actions { flex-direction: column-reverse; }
       .sn-actions .fb-cancel, .sn-actions .fb-send { flex: 1; width: 100%; }
     }
-
+@media (max-width: 768px) {
+html, body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+.shell { flex-direction: column; height: auto; min-height: calc(100vh - 52px); }
+nav { padding: 0 16px; }
+.left, .right { width: 100%; max-width: 100%; min-width: 0; flex: none; overflow-y: visible; }
+.left { flex-shrink: 0; }
+.right { border-left: none; border-top: 1px solid var(--border); }
+.left-top { padding: 20px 20px 16px; }
+.left-top h1 { font-size: 19px; }
+.left-top p { font-size: 12px; }
+#gateWrap, #uploadWrap { padding: 18px 20px; }
+.sync-blurb { margin: 16px 20px 20px; }
+.right-head { padding: 18px 20px 14px; }
+.right-body { padding: 18px 20px; }
+.btn-row { flex-direction: column; gap: 10px; }
+.ghost-btn, .founder-btn { flex: none; width: 100%; }
+.feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
+.fp-name { max-width: 150px; }
+}
+  
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
   </style>
