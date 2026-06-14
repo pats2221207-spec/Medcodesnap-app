@@ -92,6 +92,16 @@
     .fmt-row { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
     .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
 
+    /* SAMPLE NOTE LINK */
+    .sample-note-link {
+      display: block; background: none; border: none; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
+      color: var(--teal); text-align: center; text-decoration: underline;
+      text-decoration-color: transparent; padding: 2px 0; margin: -4px 0 0;
+      transition: text-decoration-color 0.18s, color 0.18s; align-self: center;
+    }
+    .sample-note-link:hover { text-decoration-color: var(--teal); color: var(--teal-dark); }
+
     .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
     .file-pill.show { display: flex; }
     .fp-icon { font-size: 18px; }
@@ -208,6 +218,43 @@
     .fb-thanks h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
     .fb-thanks p { font-size: 13px; color: var(--muted); }
 
+    /* SAMPLE NOTE MODAL */
+    .sn-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .sn-overlay.show { display: flex; }
+    .sn-modal { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 540px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .sn-modal h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .sn-modal p.sn-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .sn-note { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 16px; font-family: 'Courier New', monospace; font-size: 12.5px; line-height: 1.7; color: var(--text); white-space: pre-wrap; max-height: 320px; overflow-y: auto; margin-bottom: 18px; }
+    .sn-actions { display: flex; gap: 10px; }
+    .sn-actions .fb-cancel { flex: 1; }
+    .sn-actions .fb-send { flex: 2; }
+
+    @media (max-width: 480px) {
+      .fb-modal, .sn-modal { max-width: 100%; width: 100%; border-radius: 12px; padding: 20px; }
+      .sn-modal { max-height: 90vh; }
+      .sn-actions { flex-direction: column-reverse; }
+      .sn-actions .fb-cancel, .sn-actions .fb-send { flex: 1; width: 100%; }
+    }
+@media (max-width: 768px) {
+html, body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+.shell { flex-direction: column; height: auto; min-height: calc(100vh - 52px); }
+nav { padding: 0 16px; }
+.left, .right { width: 100%; max-width: 100%; min-width: 0; flex: none; overflow-y: visible; }
+.left { flex-shrink: 0; }
+.right { border-left: none; border-top: 1px solid var(--border); }
+.left-top { padding: 20px 20px 16px; }
+.left-top h1 { font-size: 19px; }
+.left-top p { font-size: 12px; }
+#gateWrap, #uploadWrap { padding: 18px 20px; }
+.sync-blurb { margin: 16px 20px 20px; }
+.right-head { padding: 18px 20px 14px; }
+.right-body { padding: 18px 20px; }
+.btn-row { flex-direction: column; gap: 10px; }
+.ghost-btn, .founder-btn { flex: none; width: 100%; }
+.feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
+.fp-name { max-width: 150px; }
+}
+
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
   </style>
@@ -274,6 +321,7 @@
           <span class="fmt">PDF</span>
         </div>
       </div>
+      <button type="button" class="sample-note-link" id="sampleNoteBtn" onclick="openSampleModal()">Try a Sample Note</button>
       <div class="file-pill" id="filePill">
         <div class="fp-icon">📄</div>
         <div class="fp-info">
@@ -388,6 +436,19 @@
   </div>
 </div>
 
+<!-- SAMPLE NOTE MODAL -->
+<div class="sn-overlay" id="snOverlay" onclick="closeSampleModalOutside(event)">
+  <div class="sn-modal" id="snModal">
+    <h3>Sample Clinical Note 📋</h3>
+    <p class="sn-sub">Don't have a note handy? Use this fictional sample to see MedCodeSnap in action.</p>
+    <div class="sn-note" id="snNoteText"></div>
+    <div class="sn-actions">
+      <button class="fb-cancel" onclick="closeSampleModal()">Cancel</button>
+      <button class="fb-send" onclick="useSampleNote()">Use This Note → Analyze</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const urlParams = new URLSearchParams(window.location.search);
   const utmSource = urlParams.get('utm_source');
@@ -400,6 +461,27 @@
   let user = {};
   let file = null;
   let fbType = 'Bug';
+
+  const SAMPLE_NOTE_TEXT = `PATIENT: Smith, Robert J.
+DOB: 04/22/1958
+MRN: 00847291
+DATE: 06/11/2026
+PROVIDER: Dr. M. Chen, MD
+CLINIC: Westside Family Medicine
+
+S: 68yo M here for f/u HTN, DM2, CKD stage 3, HLD. c/o fatigue x3wks, worse w/ exertion. also noticing some swelling in ankles bilat by EOD. denies CP, SOB at rest, no syncope. wife says he's been "more forgetful" lately. diet has been poor. not checking BG at home consistently. stopped metformin 2wks ago says upsets stomach.
+
+A/P:
+1. HTN - poorly controlled, BP 158/94. increase lisinopril to 20mg QD.
+2. DM2 uncontrolled - HbA1c 9.2%. restart metformin 500mg BID w/ meals. referred to diabetes educator.
+3. CKD stage 3, acute on chronic - Cr 2.1 up from baseline 1.8. renal f/u ordered. avoid NSAIDs.
+4. HLD - LDL 118. increase atorvastatin to 80mg QHS.
+5. Bilateral ankle edema - echo ordered to r/o HF. compression stockings.
+6. Obesity - BMI 38.2. referral to nutrition.
+7. OSA noncompliant w/ CPAP - sleep medicine referral renewed.
+
+RTN 4 weeks or sooner if sx worsen.
+-Dr. M. Chen MD`;
 
   function unlock() {
     const n = document.getElementById("gName").value.trim();
@@ -416,7 +498,7 @@
     }
     user = { name: n, email: e, role: r };
     gtag('event', 'gate_form_submitted', {event_category: 'engagement'});
-    fetch("https://hook.us2.make.com/2jbldsbf9ud9nonxp7t3bfcehwrtihwo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, role: r, date: new Date().toISOString() }) }).catch(() => {});
+    fetch("https://hook.us2.make.com/axn5g5gbmwacct6hpelc1cxvycgm7udq", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, role: r, date: new Date().toISOString() }) }).catch(() => {});
     document.getElementById("gateWrap").style.display = "none";
     document.getElementById("uploadWrap").classList.add("show");
     document.getElementById("syncBlurb").classList.add("show");
@@ -574,6 +656,31 @@
     document.getElementById("fbForm").style.display = "none";
     document.getElementById("fbThanks").style.display = "block";
     setTimeout(closeFeedback, 3000);
+  }
+
+  // SAMPLE NOTE
+  function openSampleModal() {
+    document.getElementById("snNoteText").textContent = SAMPLE_NOTE_TEXT;
+    document.getElementById("snOverlay").classList.add("show");
+  }
+
+  function closeSampleModal() {
+    document.getElementById("snOverlay").classList.remove("show");
+  }
+
+  function closeSampleModalOutside(e) {
+    if (e.target === document.getElementById("snOverlay")) closeSampleModal();
+  }
+
+  function useSampleNote() {
+    closeSampleModal();
+    const blob = new Blob([SAMPLE_NOTE_TEXT], { type: "text/plain" });
+    const sampleFile = new File([blob], "sample_clinical_note.txt", { type: "text/plain" });
+    file = sampleFile;
+    document.getElementById("fName").textContent = sampleFile.name;
+    document.getElementById("fSize").textContent = (sampleFile.size/1024).toFixed(1) + " KB";
+    document.getElementById("filePill").classList.add("show");
+    document.getElementById("analyzeBtn").classList.add("show");
   }
 </script>
 </body>
