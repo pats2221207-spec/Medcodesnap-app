@@ -93,14 +93,16 @@
     .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
 
     /* SAMPLE NOTE LINK */
-    .sample-note-link {
-      display: block; background: none; border: none; cursor: pointer;
-      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;
-      color: var(--teal); text-align: center; text-decoration: underline;
-      text-decoration-color: transparent; padding: 2px 0; margin: -4px 0 0;
-      transition: text-decoration-color 0.18s, color 0.18s; align-self: center;
-    }
-    .sample-note-link:hover { text-decoration-color: var(--teal); color: var(--teal-dark); }
+    ./* SAMPLE NOTE LINK */
+.sample-note-link {
+  display: block; background: transparent; cursor: pointer;
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--teal); text-align: center; text-decoration: none;
+  border: 1.5px solid var(--teal-border); border-radius: 8px;
+  padding: 9px 14px; margin: -2px 0 0; align-self: center;
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
+}
+.sample-note-link:hover { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-dark); }
 
     .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
     .file-pill.show { display: flex; }
@@ -498,7 +500,7 @@ RTN 4 weeks or sooner if sx worsen.
     }
     user = { name: n, email: e, role: r };
     gtag('event', 'gate_form_submitted', {event_category: 'engagement'});
-    fetch("https://hook.us2.make.com/axn5g5gbmwacct6hpelc1cxvycgm7udq", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, role: r, date: new Date().toISOString() }) }).catch(() => {});
+    fetch("https://hook.us2.make.com/2jbldsbf9ud9nonxp7t3bfcehwrtihwo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, role: r, date: new Date().toISOString() }) }).catch(() => {});
     document.getElementById("gateWrap").style.display = "none";
     document.getElementById("uploadWrap").classList.add("show");
     document.getElementById("syncBlurb").classList.add("show");
