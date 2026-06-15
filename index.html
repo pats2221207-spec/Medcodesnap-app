@@ -545,7 +545,7 @@ RTN 4 weeks or sooner if sx worsen.
     animateSteps();
     try {
       const b64 = await toB64(file);
-      const resp = await fetch("/api/analyze", {
+      const resp = await fetch("https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageData: b64, mediaType: file.type || "image/jpeg" })
