@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MedCodeSnap — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:        #00C896;
+      --teal-dark:   #00a87e;
+      --teal-dim:    rgba(0,200,150,0.12);
+      --teal-border: rgba(0,200,150,0.28);
+      --slate:       #1e3d50;
+      --slate-mid:   #274d63;
+      --bg:          #f2f6f9;
+      --card:        #ffffff;
+      --text:        #112233;
+      --muted:       #607080;
+      --border:      #dce6ed;
+      --success-bg:  #edfaf5;
+    }
+
+    html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
+
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 52px; background: var(--slate);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+    }
+    .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--teal); letter-spacing: 0.06em; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-email { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; }
+    .signout-btn {
+      background: transparent; color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 7px;
+      padding: 7px 14px; font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s;
+    }
+    .signout-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.3); }
+
+    .shell { display: flex; min-height: 100vh; padding-top: 52px; }
+
+    /* LEFT */
+    .left { width: 46%; min-width: 360px; max-width: 520px; background: var(--slate); display: flex; flex-direction: column; flex-shrink: 0; }
+    .left-inner { padding: 28px 32px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+    .left-inner h1 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
+
+    .drop-zone {
+      border: 2px dashed rgba(0,200,150,0.35); border-radius: 12px;
+      background: rgba(255,255,255,0.04); padding: 36px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s; position: relative;
+    }
+    .drop-zone:hover, .drop-zone.over { border-color: var(--teal); background: rgba(0,200,150,0.07); }
+    .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-icon { font-size: 32px; margin-bottom: 10px; }
+    .drop-zone h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
+    .drop-zone p { font-size: 12px; color: rgba(255,255,255,0.38); line-height: 1.5; }
+    .fmt-row { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
+    .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
+
+    .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
+    .file-pill.show { display: flex; }
+    .fp-icon { font-size: 18px; }
+    .fp-info { flex: 1; }
+    .fp-name { font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    .fp-size { font-size: 11px; color: rgba(255,255,255,0.38); margin-top: 1px; }
+    .fp-rm { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
+    .fp-rm:hover { color: #fff; }
+
+    .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
+    .btn-teal:hover { background: var(--teal-dark); }
+    .btn-teal:active { transform: scale(0.985); }
+    .btn-teal:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
+
+    /* RIGHT */
+    .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; border-left: 1px solid var(--border); }
+    .right-head { padding: 22px 30px 16px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .right-head h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .right-body { padding: 22px 30px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+    /* IDLE */
+    #idleState { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 32px 16px; }
+    .idle-ring { width: 58px; height: 58px; border-radius: 50%; background: var(--success-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    #idleState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    #idleState p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+
+    /* PROCESSING */
+    #procState { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 32px 16px; }
+    #procState.show { display: flex; }
+    .spinner { width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--teal); border-top-color: transparent; animation: rot 0.85s linear infinite; }
+    @keyframes rot { to { transform: rotate(360deg); } }
+    #procState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
+    .psteps { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 250px; text-align: left; }
+    .ps { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--muted); padding: 7px 11px; border-radius: 7px; background: var(--card); border: 1px solid var(--border); transition: all 0.25s; }
+    .ps.on { border-color: var(--teal); color: var(--text); background: var(--success-bg); }
+    .ps.done { color: var(--teal-dark); }
+    .pd { width: 6px; height: 6px; min-width: 6px; border-radius: 50%; background: var(--border); transition: background 0.25s; }
+    .ps.on .pd, .ps.done .pd { background: var(--teal); }
+
+    /* RESULTS */
+    #resState { display: none; flex-direction: column; gap: 13px; }
+    #resState.show { display: flex; }
+    .ok-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .sync-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 600; display: none; align-items: center; gap: 8px; }
+    .sync-bar.show { display: flex; }
+    .rc { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
+    .rc-head { padding: 9px 15px; background: var(--slate); display: flex; align-items: center; gap: 7px; }
+    .rc-head span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
+    .rcdot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
+    .rc-body { padding: 13px 15px; }
+    .rf { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+    .rf:last-child { border-bottom: none; padding-bottom: 0; }
+    .rf:first-child { padding-top: 0; }
+    .rl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .rv { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
+    .rv.mono { font-family: 'Courier New', monospace; font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 5px; color: var(--teal-dark); font-weight: 700; display: inline-block; }
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
+    .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
+
+    .btn-row { display: flex; gap: 10px; align-items: center; }
+    .ghost-btn { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
+    .ghost-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+    #resErr { background: #fff0f0; border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: #c0392b; display: none; line-height: 1.5; }
+    #resErr.show { display: block; }
+
+    /* FEEDBACK BUTTON */
+    .feedback-fab {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: var(--slate); color: rgba(255,255,255,0.7);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 24px;
+      padding: 8px 16px; font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    .feedback-fab:hover { background: var(--slate-mid); color: #fff; border-color: var(--teal-border); }
+    .feedback-fab .fab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+
+    .fb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .fb-overlay.show { display: flex; }
+    .fb-modal { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+    .fb-modal h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .fb-modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .fb-type-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .fb-type { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.18s; }
+    .fb-type:hover, .fb-type.active { background: var(--teal-dim); border-color: var(--teal-border); color: var(--teal-dark); }
+    .fb-textarea { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text); resize: none; height: 110px; outline: none; transition: border-color 0.2s; }
+    .fb-textarea:focus { border-color: var(--teal); }
+    .fb-textarea::placeholder { color: var(--muted); }
+    .fb-actions { display: flex; gap: 10px; margin-top: 16px; }
+    .fb-cancel { flex: 1; background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+    .fb-cancel:hover { border-color: var(--muted); color: var(--text); }
+    .fb-send { flex: 2; background: var(--teal); border: none; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 700; color: var(--slate); cursor: pointer; font-family: 'Inter', sans-serif; transition: background 0.18s; }
+    .fb-send:hover { background: var(--teal-dark); }
+    .fb-thanks { text-align: center; padding: 12px 0 4px; }
+    .fb-thanks .fb-check { font-size: 32px; margin-bottom: 10px; }
+    .fb-thanks h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .fb-thanks p { font-size: 13px; color: var(--muted); }
+
+    @media (max-width: 768px) {
+      .shell { flex-direction: column; }
+      .left, .right { width: 100%; max-width: 100%; min-width: 0; }
+      .right { border-left: none; border-top: 1px solid var(--border); }
+      nav { padding: 0 16px; }
+      .nav-email { display: none; }
+      .feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
+    }
+
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">MEDCODESNAP</div>
+  <div class="nav-right">
+    <span class="nav-email" id="navEmail"></span>
+    <button class="signout-btn" onclick="signOut()">Sign Out</button>
+  </div>
+</nav>
+
+<div class="shell">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="left-inner">
+      <h1>Upload Clinical Note</h1>
+
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileIn" accept=".jpg,.jpeg,.png,.pdf" onchange="onFile(this)"/>
+        <div class="drop-icon">📋</div>
+        <h3>Drop your clinical note here</h3>
+        <p>Or click to browse — works with photos taken on your phone</p>
+        <div class="fmt-row">
+          <span class="fmt">JPG</span>
+          <span class="fmt">PNG</span>
+          <span class="fmt">PDF</span>
+        </div>
+      </div>
+
+      <div class="file-pill" id="filePill">
+        <div class="fp-icon">📄</div>
+        <div class="fp-info">
+          <div class="fp-name" id="fName">—</div>
+          <div class="fp-size" id="fSize">—</div>
+        </div>
+        <button class="fp-rm" onclick="clearFile()">✕</button>
+      </div>
+
+      <button class="btn-teal" id="analyzeBtn" onclick="analyze()" disabled>Analyze Note →</button>
+
+      <p class="upload-fine">⚠️ Use fictional or fully de-identified notes only.</p>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+    <div class="right-head">
+      <h2>Coding Results</h2>
+    </div>
+    <div class="right-body">
+
+      <div id="idleState">
+        <div class="idle-ring">⚡</div>
+        <h3>Ready when you are</h3>
+        <p>Upload a clinical note on the left. Results appear here in seconds.</p>
+      </div>
+
+      <div id="procState">
+        <div class="spinner"></div>
+        <h3>Reading your note…</h3>
+        <div class="psteps">
+          <div class="ps on" id="ps1"><div class="pd"></div>Reading clinical note</div>
+          <div class="ps" id="ps2"><div class="pd"></div>Identifying diagnoses</div>
+          <div class="ps" id="ps3"><div class="pd"></div>Assigning ICD-10-CM codes</div>
+          <div class="ps" id="ps4"><div class="pd"></div>Preparing your results</div>
+        </div>
+      </div>
+
+      <div id="resState">
+        <div class="ok-bar">✅ Coding complete</div>
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>Patient Info</span></div>
+          <div class="rc-body">
+            <div class="rf"><div class="rl">Patient Name</div><div class="rv" id="rPt">—</div></div>
+            <div class="rf"><div class="rl">Record Key</div><div class="rv mono" id="rKey">—</div></div>
+            <div class="rf"><div class="rl">Date of Service</div><div class="rv" id="rDate">—</div></div>
+          </div>
+        </div>
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>Diagnoses</span></div>
+          <div class="rc-body">
+            <div class="rv" id="rDx" style="line-height:1.8;">—</div>
+          </div>
+        </div>
+        <div class="rc">
+          <div class="rc-head"><div class="rcdot"></div><span>ICD-10-CM Codes</span></div>
+          <div class="rc-body">
+            <div class="chips" id="rCodes"></div>
+          </div>
+        </div>
+        <div class="sync-bar" id="syncBar">✅ Synced to your Google Sheet ✓</div>
+        <div class="btn-row">
+          <button class="ghost-btn" onclick="reset()">Code another note →</button>
+        </div>
+      </div>
+
+      <div id="resErr">
+        Something went wrong reading your note. Please make sure the image is clear and try again. If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- FEEDBACK BUTTON -->
+<button class="feedback-fab" onclick="openFeedback()">
+  <span class="fab-dot"></span> Share Feedback
+</button>
+
+<!-- FEEDBACK MODAL -->
+<div class="fb-overlay" id="fbOverlay" onclick="closeFeedbackOutside(event)">
+  <div class="fb-modal" id="fbModal">
+    <div id="fbForm">
+      <h3>Share your feedback 💬</h3>
+      <p>Spotted something? Have a suggestion? We read every message.</p>
+      <div class="fb-type-row">
+        <span class="fb-type active" onclick="selectType(this, 'Bug')">🐛 Bug</span>
+        <span class="fb-type" onclick="selectType(this, 'Suggestion')">💡 Suggestion</span>
+        <span class="fb-type" onclick="selectType(this, 'Compliment')">⭐ Compliment</span>
+        <span class="fb-type" onclick="selectType(this, 'Other')">💬 Other</span>
+      </div>
+      <textarea class="fb-textarea" id="fbText" placeholder="Tell us what you experienced or what could be better…"></textarea>
+      <div class="fb-actions">
+        <button class="fb-cancel" onclick="closeFeedback()">Cancel</button>
+        <button class="fb-send" onclick="sendFeedback()">Send Feedback →</button>
+      </div>
+    </div>
+    <div id="fbThanks" class="fb-thanks" style="display:none;">
+      <div class="fb-check">✅</div>
+      <h4>Thank you!</h4>
+      <p>Your feedback has been sent to Patty directly. It means a lot.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Auth guard ----
+  const idToken = localStorage.getItem("mcs_id_token");
+  const userEmail = localStorage.getItem("mcs_email");
+  if (!idToken) {
+    window.location.href = "/login";
+  }
+  document.getElementById("navEmail").textContent = userEmail || "";
+
+  function signOut() {
+    localStorage.removeItem("mcs_id_token");
+    localStorage.removeItem("mcs_access_token");
+    localStorage.removeItem("mcs_refresh_token");
+    localStorage.removeItem("mcs_email");
+    window.location.href = "/login";
+  }
+
+  // ---- File handling ----
+  let file = null;
+
+  function onFile(input) {
+    const f = input.files[0];
+    if (!f) return;
+    file = f;
+    document.getElementById("fName").textContent = f.name;
+    document.getElementById("fSize").textContent = (f.size/1024).toFixed(1) + " KB";
+    document.getElementById("filePill").classList.add("show");
+    document.getElementById("analyzeBtn").disabled = false;
+  }
+
+  function clearFile() {
+    file = null;
+    document.getElementById("fileIn").value = "";
+    document.getElementById("filePill").classList.remove("show");
+    document.getElementById("analyzeBtn").disabled = true;
+  }
+
+  const dz = document.getElementById("dropZone");
+  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
+  dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+  dz.addEventListener("drop", e => {
+    e.preventDefault(); dz.classList.remove("over");
+    const f = e.dataTransfer.files[0];
+    if (f) { file = f; onFile({files:[f]}); }
+  });
+
+  // ---- Analyze ----
+  async function analyze() {
+    if (!file) return;
+    document.getElementById("idleState").style.display = "none";
+    document.getElementById("resState").classList.remove("show");
+    document.getElementById("resErr").classList.remove("show");
+    document.getElementById("syncBar").classList.remove("show");
+    document.getElementById("analyzeBtn").disabled = true;
+    document.getElementById("procState").classList.add("show");
+    animateSteps();
+    try {
+      const b64 = await toB64(file);
+      const resp = await fetch("https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData: b64, mediaType: file.type || "image/jpeg" })
+      });
+      if (!resp.ok) throw new Error("API error");
+      const result = await resp.json();
+      showResults(result);
+    } catch (err) {
+      console.error(err);
+      showError();
+    }
+  }
+
+  function animateSteps() {
+    ["ps1","ps2","ps3","ps4"].forEach((id,i) => {
+      setTimeout(() => {
+        if (i > 0) {
+          document.getElementById(`ps${i}`).classList.remove("on");
+          document.getElementById(`ps${i}`).classList.add("done");
+        }
+        document.getElementById(id).classList.add("on");
+      }, i * 1800);
+    });
+  }
+
+  function showResults(d) {
+    document.getElementById("procState").classList.remove("show");
+    document.getElementById("rPt").textContent   = d.patient_name || "NOT FOUND";
+    document.getElementById("rKey").textContent  = d.record_key   || "NOT FOUND";
+    document.getElementById("rDate").textContent = d.note_date    || "NOT FOUND";
+    const dxs = (d.diagnoses_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
+    document.getElementById("rDx").innerHTML = dxs.length
+      ? dxs.map((dx,i)=>`<div style="padding:2px 0">${i+1}. ${dx}</div>`).join("")
+      : "NOT FOUND";
+    const codes = (d.icd10_codes_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
+    document.getElementById("rCodes").innerHTML = codes.length
+      ? codes.map(c=>`<span class="chip">${c}</span>`).join("")
+      : `<span style="color:var(--muted);font-size:13px">NOT FOUND</span>`;
+    // Backend appends this row to the Google Sheet and reports back via sheet_synced.
+    if (d.sheet_synced) {
+      document.getElementById("syncBar").classList.add("show");
+    }
+    document.getElementById("resState").classList.add("show");
+    document.getElementById("analyzeBtn").disabled = false;
+  }
+
+  function showError() {
+    document.getElementById("procState").classList.remove("show");
+    document.getElementById("resErr").classList.add("show");
+    document.getElementById("idleState").style.display = "";
+    document.getElementById("analyzeBtn").disabled = false;
+  }
+
+  function reset() {
+    file = null;
+    document.getElementById("fileIn").value = "";
+    document.getElementById("filePill").classList.remove("show");
+    document.getElementById("analyzeBtn").disabled = true;
+    document.getElementById("resState").classList.remove("show");
+    document.getElementById("syncBar").classList.remove("show");
+    document.getElementById("resErr").classList.remove("show");
+    document.getElementById("idleState").style.display = "";
+    ["ps1","ps2","ps3","ps4"].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove("on","done");
+    });
+    document.getElementById("ps1").classList.add("on");
+  }
+
+  function toB64(f) {
+    return new Promise((res,rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(",")[1]);
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+  }
+
+  // ---- Feedback ----
+  let fbType = 'Bug';
+  function openFeedback() {
+    document.getElementById("fbOverlay").classList.add("show");
+    document.getElementById("fbForm").style.display = "block";
+    document.getElementById("fbThanks").style.display = "none";
+    document.getElementById("fbText").value = "";
+  }
+  function closeFeedback() {
+    document.getElementById("fbOverlay").classList.remove("show");
+  }
+  function closeFeedbackOutside(e) {
+    if (e.target === document.getElementById("fbOverlay")) closeFeedback();
+  }
+  function selectType(el, type) {
+    fbType = type;
+    document.querySelectorAll(".fb-type").forEach(t => t.classList.remove("active"));
+    el.classList.add("active");
+  }
+  function sendFeedback() {
+    const msg = document.getElementById("fbText").value.trim();
+    if (!msg) { document.getElementById("fbText").focus(); return; }
+    const subject = encodeURIComponent(`MedCodeSnap Feedback: ${fbType}`);
+    const body = encodeURIComponent(`Type: ${fbType}\n\n${msg}`);
+    window.open(`mailto:patty@medcodesnap.com?subject=${subject}&body=${body}`);
+    document.getElementById("fbForm").style.display = "none";
+    document.getElementById("fbThanks").style.display = "block";
+    setTimeout(closeFeedback, 3000);
+  }
+</script>
+</body>
+</html>
