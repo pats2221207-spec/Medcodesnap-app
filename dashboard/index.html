@@ -146,7 +146,6 @@
 
     /* Diagnosis rows */
     .dx-item { display: flex; gap: 8px; align-items: center; }
-    .dx-item input { flex: 1; }
     .rm-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px 8px; line-height: 1; transition: all 0.15s; flex-shrink: 0; }
     .rm-btn:hover { border-color: var(--error-text); color: var(--error-text); }
     .add-btn { display: flex; align-items: center; gap: 6px; background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 7px; color: var(--teal-dark); font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; padding: 6px 12px; cursor: pointer; transition: all 0.18s; width: fit-content; }
@@ -270,22 +269,26 @@
       .feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
     }
 
-    /* Diagnosis autocomplete */
-    .dx-ac-wrap { position: relative; flex: 1; }
-    .dx-ac-dropdown {
-      position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 300;
+    /* Shared autocomplete popup — body-level, position:fixed to escape overflow:hidden ancestors */
+    .ac-popup {
+      position: fixed; z-index: 9999;
       background: var(--card); border: 1px solid var(--border); border-radius: 8px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1); overflow: hidden; display: none;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.13); overflow-y: auto;
+      display: none; max-height: 220px;
     }
-    .dx-ac-dropdown.open { display: block; }
-    .dx-ac-item {
+    .ac-popup.open { display: block; }
+    .ac-item {
       padding: 9px 13px; font-size: 12px; color: var(--text); cursor: pointer;
       transition: background 0.12s; border-bottom: 1px solid var(--border);
-      line-height: 1.4;
+      display: flex; gap: 10px; align-items: baseline; line-height: 1.4;
     }
-    .dx-ac-item:last-child { border-bottom: none; }
-    .dx-ac-item:hover, .dx-ac-item.active { background: var(--success-bg); color: var(--teal-dark); }
-    .dx-ac-item strong { font-weight: 700; }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.active { background: var(--success-bg); color: var(--teal-dark); }
+    .ac-item strong { font-weight: 700; }
+    .ac-item-code { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--teal-dark); white-space: nowrap; flex-shrink: 0; }
+    .ac-item-desc { font-size: 12px; color: var(--text); }
+    /* dx-item: input fills remaining space now that wrapper div is gone */
+    .dx-item input { flex: 1; }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
@@ -652,67 +655,100 @@ function updateRecordKey() {
   );
 }
 
-// ── Diagnoses list with autocomplete (Fix 2) ─────────────────────────────────
-function addDx(val="") {
-  const wrap = document.getElementById("dxList");
-  const div  = document.createElement("div");
-  div.className = "dx-item";
-  div.innerHTML = `
-    <div class="dx-ac-wrap">
-      <input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}" autocomplete="off"/>
-      <div class="dx-ac-dropdown"></div>
-    </div>
-    <button class="rm-btn" onclick="this.closest('.dx-item').remove()">✕</button>`;
-  wrap.appendChild(div);
-  setupDxAutocomplete(div.querySelector("input"), div.querySelector(".dx-ac-dropdown"));
+// ── Shared body-level autocomplete popup (escapes all overflow:hidden ancestors) ──
+const _acPopup = document.createElement("div");
+_acPopup.className = "ac-popup";
+document.body.appendChild(_acPopup);
+
+let _acActiveInput = null;
+let _acResults     = [];
+let _acOnSelect    = null;
+let _acIdx         = -1;
+
+function _acPosition(input) {
+  const r = input.getBoundingClientRect();
+  _acPopup.style.top   = (r.bottom + 4) + "px";
+  _acPopup.style.left  = r.left + "px";
+  _acPopup.style.width = Math.max(r.width, 240) + "px";
 }
+
+function _acShow(input, results, onSelect) {
+  _acActiveInput = input;
+  _acResults     = results;
+  _acOnSelect    = onSelect;
+  _acIdx         = -1;
+  _acPosition(input);
+  _acPopup.innerHTML = results.map(([code, name], i) =>
+    `<div class="ac-item" data-idx="${i}">
+       <span class="ac-item-code">${escHtml(code)}</span>
+       <span class="ac-item-desc">${escHtml(name)}</span>
+     </div>`
+  ).join("");
+  _acPopup.querySelectorAll(".ac-item").forEach(el => {
+    el.addEventListener("mousedown", e => {
+      e.preventDefault();
+      onSelect(_acResults[parseInt(el.dataset.idx)]);
+      _acHide();
+    });
+  });
+  _acPopup.classList.add("open");
+}
+
+function _acHide() {
+  _acPopup.classList.remove("open");
+  _acActiveInput = null;
+}
+
+// Reposition popup when parent scrolls (e.g. right-body scrolls)
+window.addEventListener("scroll", () => { if (_acActiveInput) _acPosition(_acActiveInput); }, true);
 
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-function setupDxAutocomplete(input, dropdown) {
-  let acIdx = -1;
-
+// Generic autocomplete setup: urlFn(q)→url, onSelect([code,name])→void
+function setupAcInput(input, urlFn, onSelect) {
   const search = debounce(async (q) => {
     q = q.trim();
-    if (q.length < 2) { dropdown.classList.remove("open"); return; }
+    if (q.length < 2) { _acHide(); return; }
     try {
-      const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=8&sf=code,name&df=code,name`;
-      const resp = await fetch(url);
+      const resp = await fetch(urlFn(q));
       const data = await resp.json();
       const items = data[3] || [];
-      if (!items.length) { dropdown.classList.remove("open"); return; }
-      acIdx = -1;
-      dropdown.innerHTML = items.map(([code, name]) => {
-        const hl = name.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<strong>$1</strong>');
-        return `<div class="dx-ac-item" data-desc="${escHtml(name)}">${hl}</div>`;
-      }).join("");
-      dropdown.querySelectorAll(".dx-ac-item").forEach(item => {
-        item.addEventListener("mousedown", e => {
-          e.preventDefault();
-          input.value = item.dataset.desc;
-          dropdown.classList.remove("open");
-        });
-      });
-      dropdown.classList.add("open");
-    } catch(e) { dropdown.classList.remove("open"); }
+      if (!items.length) { _acHide(); return; }
+      _acShow(input, items, onSelect);
+    } catch(e) { _acHide(); }
   }, 300);
 
   input.addEventListener("input",  () => search(input.value));
-  input.addEventListener("blur",   () => setTimeout(() => dropdown.classList.remove("open"), 150));
+  input.addEventListener("blur",   () => setTimeout(_acHide, 150));
   input.addEventListener("focus",  () => { if (input.value.trim().length >= 2) search(input.value); });
   input.addEventListener("keydown", e => {
-    const items = dropdown.querySelectorAll(".dx-ac-item");
-    if (!items.length || !dropdown.classList.contains("open")) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); acIdx = Math.min(acIdx+1, items.length-1); items.forEach((it,i) => it.classList.toggle("active", i===acIdx)); }
-    else if (e.key === "ArrowUp") { e.preventDefault(); acIdx = Math.max(acIdx-1, 0); items.forEach((it,i) => it.classList.toggle("active", i===acIdx)); }
-    else if (e.key === "Enter" && acIdx >= 0) { e.preventDefault(); input.value = items[acIdx].dataset.desc; dropdown.classList.remove("open"); }
-    else if (e.key === "Escape") { dropdown.classList.remove("open"); }
+    if (!_acPopup.classList.contains("open") || _acActiveInput !== input) return;
+    const items = _acPopup.querySelectorAll(".ac-item");
+    if (e.key === "ArrowDown") { e.preventDefault(); _acIdx = Math.min(_acIdx+1, items.length-1); items.forEach((it,i) => it.classList.toggle("active", i===_acIdx)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); _acIdx = Math.max(_acIdx-1, 0); items.forEach((it,i) => it.classList.toggle("active", i===_acIdx)); }
+    else if (e.key === "Enter" && _acIdx >= 0) { e.preventDefault(); onSelect(_acResults[_acIdx]); _acHide(); }
+    else if (e.key === "Escape") { _acHide(); }
   });
 }
 
-// ── ICD-10 list (Change 5) ────────────────────────────────────────────────────
+const ICD_URL = q => `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=8&sf=code,name&df=code,name`;
+
+// ── Diagnoses list ────────────────────────────────────────────────────────────
+function addDx(val="") {
+  const wrap = document.getElementById("dxList");
+  const div  = document.createElement("div");
+  div.className = "dx-item";
+  div.innerHTML = `
+    <input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}" autocomplete="off"/>
+    <button class="rm-btn" onclick="this.closest('.dx-item').remove()">✕</button>`;
+  wrap.appendChild(div);
+  const inp = div.querySelector("input");
+  setupAcInput(inp, ICD_URL, ([code, name]) => { inp.value = name; });
+}
+
+// ── ICD-10 list ───────────────────────────────────────────────────────────────
 let _icdSearchTarget = null;
 function addICD(code="", desc="") {
   const wrap = document.getElementById("icdList");
@@ -720,14 +756,21 @@ function addICD(code="", desc="") {
   div.className = "icd-item";
   div.innerHTML = `
     <div class="icd-top">
-      <input class="field-input icd-code-input" type="text" placeholder="E11.65" value="${escHtml(code)}"/>
-      <input class="field-input icd-desc-input" type="text" placeholder="Description…" value="${escHtml(desc)}"/>
+      <input class="field-input icd-code-input" type="text" placeholder="E11.65" value="${escHtml(code)}" autocomplete="off"/>
+      <input class="field-input icd-desc-input" type="text" placeholder="Description…" value="${escHtml(desc)}" autocomplete="off"/>
       <div class="icd-actions">
         <button class="search-icd-btn" onclick="openIcdSearch(this)">🔍 Search</button>
         <button class="rm-btn" onclick="this.closest('.icd-item').remove()">✕</button>
       </div>
     </div>`;
   wrap.appendChild(div);
+  const codeInp = div.querySelector(".icd-code-input");
+  const descInp = div.querySelector(".icd-desc-input");
+  const fill = ([c, n]) => { codeInp.value = c; descInp.value = n; };
+  // Code field: search by code prefix
+  setupAcInput(codeInp, ICD_URL, fill);
+  // Description field: search by keyword, also fills code
+  setupAcInput(descInp, ICD_URL, fill);
 }
 
 function openIcdSearch(btn) {
