@@ -21,6 +21,8 @@
       --muted:       #607080;
       --border:      #dce6ed;
       --success-bg:  #edfaf5;
+      --error-bg:    #fff0f0;
+      --error-text:  #c0392b;
     }
 
     html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); }
@@ -45,7 +47,7 @@
 
     .shell { display: flex; min-height: 100vh; padding-top: 52px; }
 
-    /* LEFT */
+    /* ── LEFT ─────────────────────────────────────────────────────── */
     .left { width: 46%; min-width: 360px; max-width: 520px; background: var(--slate); display: flex; flex-direction: column; flex-shrink: 0; }
     .left-inner { padding: 28px 32px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
     .left-inner h1 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: #fff; }
@@ -59,7 +61,7 @@
     .drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .drop-icon { font-size: 32px; margin-bottom: 10px; }
     .drop-zone h3 { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 5px; }
-    .drop-zone p { font-size: 12px; color: rgba(255,255,255,0.38); line-height: 1.5; }
+    .drop-zone p  { font-size: 12px; color: rgba(255,255,255,0.38); line-height: 1.5; }
     .fmt-row { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
     .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
 
@@ -72,26 +74,39 @@
     .fp-rm { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
     .fp-rm:hover { color: #fff; }
 
+    /* Tab selector */
+    .tab-selector-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .tab-selector-wrap label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .tab-select {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+      color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+      padding: 9px 12px; cursor: pointer; width: 100%; outline: none; transition: border-color 0.18s;
+      appearance: none; -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.4)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center;
+    }
+    .tab-select:focus { border-color: var(--teal); }
+    .tab-select option { background: #1e3d50; color: #fff; }
+    .tab-loading { font-size: 11px; color: rgba(255,255,255,0.35); font-style: italic; }
+
     .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
     .btn-teal:hover { background: var(--teal-dark); }
     .btn-teal:active { transform: scale(0.985); }
     .btn-teal:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
 
-    .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
-
-    /* RIGHT */
+    /* ── RIGHT ────────────────────────────────────────────────────── */
     .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; border-left: 1px solid var(--border); }
     .right-head { padding: 22px 30px 16px; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .right-head h2 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
-    .right-body { padding: 22px 30px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .right-body { padding: 22px 30px; flex: 1; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
 
-    /* IDLE */
+    /* Idle */
     #idleState { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 32px 16px; }
     .idle-ring { width: 58px; height: 58px; border-radius: 50%; background: var(--success-bg); display: flex; align-items: center; justify-content: center; font-size: 24px; }
     #idleState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
-    #idleState p { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+    #idleState p  { font-size: 13px; color: var(--muted); line-height: 1.6; max-width: 280px; }
 
-    /* PROCESSING */
+    /* Processing */
     #procState { flex: 1; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; padding: 32px 16px; }
     #procState.show { display: flex; }
     .spinner { width: 52px; height: 52px; border-radius: 50%; border: 3px solid var(--teal); border-top-color: transparent; animation: rot 0.85s linear infinite; }
@@ -99,39 +114,120 @@
     #procState h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); }
     .psteps { display: flex; flex-direction: column; gap: 7px; width: 100%; max-width: 250px; text-align: left; }
     .ps { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--muted); padding: 7px 11px; border-radius: 7px; background: var(--card); border: 1px solid var(--border); transition: all 0.25s; }
-    .ps.on { border-color: var(--teal); color: var(--text); background: var(--success-bg); }
+    .ps.on   { border-color: var(--teal); color: var(--text); background: var(--success-bg); }
     .ps.done { color: var(--teal-dark); }
     .pd { width: 6px; height: 6px; min-width: 6px; border-radius: 50%; background: var(--border); transition: background 0.25s; }
     .ps.on .pd, .ps.done .pd { background: var(--teal); }
 
-    /* RESULTS */
-    #resState { display: none; flex-direction: column; gap: 13px; }
+    /* Results */
+    #resState { display: none; flex-direction: column; gap: 16px; }
     #resState.show { display: flex; }
+
     .ok-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 500; display: flex; align-items: center; gap: 8px; }
-    .sync-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 600; display: none; align-items: center; gap: 8px; }
-    .sync-bar.show { display: flex; }
+
+    /* Section cards */
     .rc { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
     .rc-head { padding: 9px 15px; background: var(--slate); display: flex; align-items: center; gap: 7px; }
     .rc-head span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
     .rcdot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
-    .rc-body { padding: 13px 15px; }
-    .rf { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-    .rf:last-child { border-bottom: none; padding-bottom: 0; }
-    .rf:first-child { padding-top: 0; }
-    .rl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-    .rv { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
-    .rv.mono { font-family: 'Courier New', monospace; font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 5px; color: var(--teal-dark); font-weight: 700; display: inline-block; }
-    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
-    .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
+    .rc-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 
-    .btn-row { display: flex; gap: 10px; align-items: center; }
-    .ghost-btn { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
-    .ghost-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+    /* Editable field rows */
+    .field-row { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .field-input {
+      border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text);
+      background: var(--bg); outline: none; transition: border-color 0.18s; width: 100%;
+    }
+    .field-input:focus { border-color: var(--teal); }
+    .field-input[readonly] { background: #eef2f6; color: var(--muted); cursor: default; font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--teal-dark); }
+    .field-input.required-err { border-color: var(--error-text); }
 
-    #resErr { background: #fff0f0; border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: #c0392b; display: none; line-height: 1.5; }
+    /* Diagnosis rows */
+    .dx-item { display: flex; gap: 8px; align-items: center; }
+    .dx-item input { flex: 1; }
+    .rm-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px 8px; line-height: 1; transition: all 0.15s; flex-shrink: 0; }
+    .rm-btn:hover { border-color: var(--error-text); color: var(--error-text); }
+    .add-btn { display: flex; align-items: center; gap: 6px; background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 7px; color: var(--teal-dark); font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; padding: 6px 12px; cursor: pointer; transition: all 0.18s; width: fit-content; }
+    .add-btn:hover { background: rgba(0,200,150,0.2); }
+
+    /* ICD-10 rows */
+    .icd-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .icd-top { display: flex; gap: 8px; align-items: center; }
+    .icd-code-input { width: 120px; flex-shrink: 0; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--teal-dark); }
+    .icd-desc-input { flex: 1; font-size: 12px; }
+    .icd-actions { display: flex; gap: 6px; align-items: center; }
+    .search-icd-btn { background: var(--slate); color: rgba(255,255,255,0.8); border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .search-icd-btn:hover { background: var(--slate-mid); }
+
+    /* Export As button */
+    .export-wrap { position: relative; }
+    .export-btn {
+      width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px;
+      padding: 13px 16px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.18s;
+    }
+    .export-btn:hover { background: var(--teal-dark); }
+    .export-caret { font-size: 10px; }
+    .export-menu {
+      position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12); overflow: hidden;
+      display: none; z-index: 50;
+    }
+    .export-menu.open { display: block; }
+    .export-option {
+      padding: 13px 16px; font-size: 13px; font-weight: 600; color: var(--text);
+      cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .export-option:last-child { border-bottom: none; }
+    .export-option:hover { background: var(--bg); }
+
+    .reset-btn { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .reset-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+    /* Inline messages */
+    .inline-err { font-size: 12px; color: var(--error-text); font-weight: 500; padding: 8px 12px; background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 7px; display: none; }
+    .inline-err.show { display: block; }
+    .inline-ok  { font-size: 13px; color: var(--teal-dark); font-weight: 600; padding: 10px 14px; background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; display: none; }
+    .inline-ok.show { display: flex; align-items: center; gap: 8px; }
+
+    /* Error state */
+    #resErr { background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: var(--error-text); display: none; line-height: 1.5; }
     #resErr.show { display: block; }
 
-    /* FEEDBACK BUTTON */
+    /* ICD Search Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--card); border-radius: 16px; padding: 24px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 14px; }
+    .modal-box h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-search-row { display: flex; gap: 8px; }
+    .modal-search-input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.18s; }
+    .modal-search-input:focus { border-color: var(--teal); }
+    .modal-search-btn { background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .modal-results { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .modal-result-item { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; display: flex; gap: 10px; align-items: flex-start; }
+    .modal-result-item:hover { background: var(--success-bg); border-color: var(--teal-border); }
+    .modal-result-code { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--teal-dark); white-space: nowrap; }
+    .modal-result-desc { font-size: 12px; color: var(--text); line-height: 1.4; }
+    .modal-msg { font-size: 13px; color: var(--muted); text-align: center; padding: 12px 0; }
+    .modal-cancel { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; color: var(--muted); font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+    /* Duplicate dialog */
+    .dup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1001; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .dup-overlay.show { display: flex; }
+    .dup-box { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 380px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 16px; }
+    .dup-box h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+    .dup-box p  { font-size: 13px; color: var(--muted); line-height: 1.5; }
+    .dup-btns { display: flex; gap: 10px; }
+    .dup-update-btn { flex: 1; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .dup-add-btn    { flex: 1; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 11px; font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; }
+
+    /* Feedback FAB */
     .feedback-fab {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
       background: var(--slate); color: rgba(255,255,255,0.7);
@@ -142,13 +238,13 @@
       transition: all 0.2s; box-shadow: 0 2px 12px rgba(0,0,0,0.2);
     }
     .feedback-fab:hover { background: var(--slate-mid); color: #fff; border-color: var(--teal-border); }
-    .feedback-fab .fab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
+    .fab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
 
     .fb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .fb-overlay.show { display: flex; }
     .fb-modal { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
     .fb-modal h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .fb-modal p { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+    .fb-modal p  { font-size: 13px; color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
     .fb-type-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
     .fb-type { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.18s; }
     .fb-type:hover, .fb-type.active { background: var(--teal-dim); border-color: var(--teal-border); color: var(--teal-dark); }
@@ -163,7 +259,7 @@
     .fb-thanks { text-align: center; padding: 12px 0 4px; }
     .fb-thanks .fb-check { font-size: 32px; margin-bottom: 10px; }
     .fb-thanks h4 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-    .fb-thanks p { font-size: 13px; color: var(--muted); }
+    .fb-thanks p  { font-size: 13px; color: var(--muted); }
 
     @media (max-width: 768px) {
       .shell { flex-direction: column; }
@@ -216,9 +312,16 @@
         <button class="fp-rm" onclick="clearFile()">✕</button>
       </div>
 
-      <button class="btn-teal" id="analyzeBtn" onclick="analyze()" disabled>Analyze Note →</button>
+      <!-- Tab selector (Change 4) -->
+      <div class="tab-selector-wrap">
+        <label>Select Provider Sheet</label>
+        <select class="tab-select" id="tabSelect">
+          <option value="">Loading tabs…</option>
+        </select>
+        <span class="tab-loading" id="tabLoading" style="display:none">Refreshing tab list…</span>
+      </div>
 
-      <p class="upload-fine">⚠️ Use fictional or fully de-identified notes only.</p>
+      <button class="btn-teal" id="analyzeBtn" onclick="analyze()" disabled>Analyze Note →</button>
     </div>
   </div>
 
@@ -230,7 +333,7 @@
     <div class="right-body">
 
       <div id="idleState">
-        <div class="idle-ring">⚡</div>
+        <div class="idle-ring">✨</div>
         <h3>Ready when you are</h3>
         <p>Upload a clinical note on the left. Results appear here in seconds.</p>
       </div>
@@ -240,70 +343,131 @@
         <h3>Reading your note…</h3>
         <div class="psteps">
           <div class="ps on" id="ps1"><div class="pd"></div>Reading clinical note</div>
-          <div class="ps" id="ps2"><div class="pd"></div>Identifying diagnoses</div>
-          <div class="ps" id="ps3"><div class="pd"></div>Assigning ICD-10-CM codes</div>
-          <div class="ps" id="ps4"><div class="pd"></div>Preparing your results</div>
+          <div class="ps"    id="ps2"><div class="pd"></div>Identifying diagnoses</div>
+          <div class="ps"    id="ps3"><div class="pd"></div>Assigning ICD-10-CM codes</div>
+          <div class="ps"    id="ps4"><div class="pd"></div>Preparing your results</div>
         </div>
       </div>
 
+      <!-- Results (Change 5 & 6) -->
       <div id="resState">
-        <div class="ok-bar">✅ Coding complete</div>
+        <div class="ok-bar">✅ Coding complete — review and edit below before exporting</div>
+
+        <!-- Patient Info -->
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Patient Info</span></div>
           <div class="rc-body">
-            <div class="rf"><div class="rl">Patient Name</div><div class="rv" id="rPt">—</div></div>
-            <div class="rf"><div class="rl">Record Key</div><div class="rv mono" id="rKey">—</div></div>
-            <div class="rf"><div class="rl">Date of Service</div><div class="rv" id="rDate">—</div></div>
+            <div class="field-row">
+              <div class="field-label">Patient Name <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fPatientName" type="text" placeholder="Last, First" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Date of Birth <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fDOB" type="text" placeholder="MM/DD/YYYY" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Date of Service <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fDOS" type="text" placeholder="MM/DD/YYYY" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Record Key (auto-generated)</div>
+              <input class="field-input" id="fRecordKey" type="text" readonly/>
+            </div>
           </div>
         </div>
+
+        <!-- Diagnoses -->
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Diagnoses</span></div>
           <div class="rc-body">
-            <div class="rv" id="rDx" style="line-height:1.8;">—</div>
+            <div id="dxList" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <button class="add-btn" onclick="addDx()">➕ Add diagnosis</button>
           </div>
         </div>
+
+        <!-- ICD-10 Codes -->
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>ICD-10-CM Codes</span></div>
           <div class="rc-body">
-            <div class="chips" id="rCodes"></div>
+            <div id="icdList" style="display:flex;flex-direction:column;gap:10px;"></div>
+            <button class="add-btn" onclick="addICD('','')">➕ Add ICD-10 code</button>
           </div>
         </div>
-        <div class="sync-bar" id="syncBar">✅ Synced to your Google Sheet ✓</div>
-        <div class="btn-row">
-          <button class="ghost-btn" onclick="reset()">Code another note →</button>
+
+        <!-- Inline messages -->
+        <div class="inline-err" id="exportErr"></div>
+        <div class="inline-ok"  id="exportOk"></div>
+
+        <!-- Export As button -->
+        <div class="export-wrap" id="exportWrap">
+          <button class="export-btn" onclick="toggleExportMenu()">
+            Export As <span class="export-caret">▲</span>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <div class="export-option" onclick="doExport('sheets')">📊 Transfer to Google Sheets</div>
+            <div class="export-option" onclick="doExport('xlsx')">📗 Download as Excel (.xlsx)</div>
+            <div class="export-option" onclick="doExport('docx')">📄 Download as Word (.docx)</div>
+          </div>
         </div>
+
+        <button class="reset-btn" onclick="reset()">Code another note →</button>
       </div>
 
       <div id="resErr">
-        Something went wrong reading your note. Please make sure the image is clear and try again. If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
+        Something went wrong reading your note. Please make sure the image is clear and try again.
+        If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
       </div>
 
     </div>
   </div>
-
 </div>
 
-<!-- FEEDBACK BUTTON -->
+<!-- ICD-10 Search Modal -->
+<div class="modal-overlay" id="icdModal" onclick="closeIcdModalOutside(event)">
+  <div class="modal-box">
+    <h3>Search ICD-10 Codes</h3>
+    <div class="modal-search-row">
+      <input class="modal-search-input" id="icdSearchInput" type="text" placeholder="Search by keyword or code…" onkeydown="if(event.key==='Enter') searchICD()"/>
+      <button class="modal-search-btn" onclick="searchICD()">Search</button>
+    </div>
+    <div class="modal-results" id="icdResults"><p class="modal-msg">Type above to search the CMS ICD-10-CM database.</p></div>
+    <button class="modal-cancel" onclick="closeIcdModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- Duplicate Record Dialog -->
+<div class="dup-overlay" id="dupOverlay">
+  <div class="dup-box">
+    <h3>Record already exists</h3>
+    <p>A record with this Record Key already exists in the sheet. Would you like to update it or add a new entry?</p>
+    <div class="dup-btns">
+      <button class="dup-update-btn" onclick="resolvedup('update')">Update</button>
+      <button class="dup-add-btn"    onclick="resolvedup('add')">Add New</button>
+    </div>
+  </div>
+</div>
+
+<!-- Feedback FAB -->
 <button class="feedback-fab" onclick="openFeedback()">
   <span class="fab-dot"></span> Share Feedback
 </button>
 
-<!-- FEEDBACK MODAL -->
+<!-- Feedback Modal -->
 <div class="fb-overlay" id="fbOverlay" onclick="closeFeedbackOutside(event)">
   <div class="fb-modal" id="fbModal">
     <div id="fbForm">
       <h3>Share your feedback 💬</h3>
       <p>Spotted something? Have a suggestion? We read every message.</p>
       <div class="fb-type-row">
-        <span class="fb-type active" onclick="selectType(this, 'Bug')">🐛 Bug</span>
-        <span class="fb-type" onclick="selectType(this, 'Suggestion')">💡 Suggestion</span>
-        <span class="fb-type" onclick="selectType(this, 'Compliment')">⭐ Compliment</span>
-        <span class="fb-type" onclick="selectType(this, 'Other')">💬 Other</span>
+        <span class="fb-type active" onclick="selectType(this,'Bug')">🐛 Bug</span>
+        <span class="fb-type" onclick="selectType(this,'Suggestion')">💡 Suggestion</span>
+        <span class="fb-type" onclick="selectType(this,'Compliment')">✌ Compliment</span>
+        <span class="fb-type" onclick="selectType(this,'Other')">💬 Other</span>
       </div>
       <textarea class="fb-textarea" id="fbText" placeholder="Tell us what you experienced or what could be better…"></textarea>
       <div class="fb-actions">
         <button class="fb-cancel" onclick="closeFeedback()">Cancel</button>
-        <button class="fb-send" onclick="sendFeedback()">Send Feedback →</button>
+        <button class="fb-send"   onclick="sendFeedback()">Send Feedback →</button>
       </div>
     </div>
     <div id="fbThanks" class="fb-thanks" style="display:none;">
@@ -315,171 +479,584 @@
 </div>
 
 <script>
-  // ---- Auth guard ----
-  const idToken = localStorage.getItem("mcs_id_token");
-  const userEmail = localStorage.getItem("mcs_email");
-  if (!idToken) {
-    window.location.href = "/login";
-  }
-  document.getElementById("navEmail").textContent = userEmail || "";
+// ── Config ────────────────────────────────────────────────────────────────────
+const API_URL     = "https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze";
+const SHEET_ID    = "1FPxZOjNuL5EkEg7lfJX8HPBhdiTHUg7NafUogH33pfU";
 
-  function signOut() {
-    localStorage.removeItem("mcs_id_token");
-    localStorage.removeItem("mcs_access_token");
-    localStorage.removeItem("mcs_refresh_token");
-    localStorage.removeItem("mcs_email");
-    window.location.href = "/login";
-  }
+// ── Auth guard ────────────────────────────────────────────────────────────────
+const idToken   = localStorage.getItem("mcs_id_token");
+const userEmail = localStorage.getItem("mcs_email");
+if (!idToken) { window.location.href = "/login"; }
+document.getElementById("navEmail").textContent = userEmail || "";
 
-  // ---- File handling ----
-  let file = null;
+function signOut() {
+  ["mcs_id_token","mcs_access_token","mcs_refresh_token","mcs_email"].forEach(k => localStorage.removeItem(k));
+  window.location.href = "/login";
+}
 
-  function onFile(input) {
-    const f = input.files[0];
-    if (!f) return;
-    file = f;
-    document.getElementById("fName").textContent = f.name;
-    document.getElementById("fSize").textContent = (f.size/1024).toFixed(1) + " KB";
-    document.getElementById("filePill").classList.add("show");
-    document.getElementById("analyzeBtn").disabled = false;
-  }
+// ── File handling ─────────────────────────────────────────────────────────────
+let file = null;
+function onFile(input) {
+  const f = input.files[0]; if (!f) return;
+  file = f;
+  document.getElementById("fName").textContent = f.name;
+  document.getElementById("fSize").textContent = (f.size/1024).toFixed(1) + " KB";
+  document.getElementById("filePill").classList.add("show");
+  document.getElementById("analyzeBtn").disabled = false;
+}
+function clearFile() {
+  file = null;
+  document.getElementById("fileIn").value = "";
+  document.getElementById("filePill").classList.remove("show");
+  document.getElementById("analyzeBtn").disabled = true;
+}
+const dz = document.getElementById("dropZone");
+dz.addEventListener("dragover",  e => { e.preventDefault(); dz.classList.add("over"); });
+dz.addEventListener("dragleave", () => dz.classList.remove("over"));
+dz.addEventListener("drop",      e => { e.preventDefault(); dz.classList.remove("over"); const f = e.dataTransfer.files[0]; if (f) { file = f; onFile({files:[f]}); } });
 
-  function clearFile() {
-    file = null;
-    document.getElementById("fileIn").value = "";
-    document.getElementById("filePill").classList.remove("show");
-    document.getElementById("analyzeBtn").disabled = true;
-  }
-
-  const dz = document.getElementById("dropZone");
-  dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
-  dz.addEventListener("dragleave", () => dz.classList.remove("over"));
-  dz.addEventListener("drop", e => {
-    e.preventDefault(); dz.classList.remove("over");
-    const f = e.dataTransfer.files[0];
-    if (f) { file = f; onFile({files:[f]}); }
-  });
-
-  // ---- Analyze ----
-  async function analyze() {
-    if (!file) return;
-    document.getElementById("idleState").style.display = "none";
-    document.getElementById("resState").classList.remove("show");
-    document.getElementById("resErr").classList.remove("show");
-    document.getElementById("syncBar").classList.remove("show");
-    document.getElementById("analyzeBtn").disabled = true;
-    document.getElementById("procState").classList.add("show");
-    animateSteps();
-    try {
-      const b64 = await toB64(file);
-      const resp = await fetch("https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageData: b64, mediaType: file.type || "image/jpeg" })
-      });
-      if (!resp.ok) throw new Error("API error");
-      const result = await resp.json();
-      showResults(result);
-    } catch (err) {
-      console.error(err);
-      showError();
-    }
-  }
-
-  function animateSteps() {
-    ["ps1","ps2","ps3","ps4"].forEach((id,i) => {
-      setTimeout(() => {
-        if (i > 0) {
-          document.getElementById(`ps${i}`).classList.remove("on");
-          document.getElementById(`ps${i}`).classList.add("done");
-        }
-        document.getElementById(id).classList.add("on");
-      }, i * 1800);
+// ── Tab selector (Change 4) ───────────────────────────────────────────────────
+async function loadTabs() {
+  const sel = document.getElementById("tabSelect");
+  const lbl = document.getElementById("tabLoading");
+  try {
+    lbl.style.display = "block";
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getTabs", sheetId: SHEET_ID })
     });
+    const data = await resp.json();
+    const tabs = data.tabs || [];
+    sel.innerHTML = tabs.length
+      ? tabs.map((t,i) => `<option value="${escHtml(t)}"${i===0?' selected':''}>${escHtml(t)}</option>`).join("")
+      : `<option value="Sheet1">Sheet1</option>`;
+  } catch(e) {
+    sel.innerHTML = `<option value="Sheet1">Sheet1</option>`;
+  } finally {
+    lbl.style.display = "none";
   }
+}
+loadTabs();
 
-  function showResults(d) {
-    document.getElementById("procState").classList.remove("show");
-    document.getElementById("rPt").textContent   = d.patient_name || "NOT FOUND";
-    document.getElementById("rKey").textContent  = d.record_key   || "NOT FOUND";
-    document.getElementById("rDate").textContent = d.note_date    || "NOT FOUND";
-    const dxs = (d.diagnoses_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
-    document.getElementById("rDx").innerHTML = dxs.length
-      ? dxs.map((dx,i)=>`<div style="padding:2px 0">${i+1}. ${dx}</div>`).join("")
-      : "NOT FOUND";
-    const codes = (d.icd10_codes_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
-    document.getElementById("rCodes").innerHTML = codes.length
-      ? codes.map(c=>`<span class="chip">${c}</span>`).join("")
-      : `<span style="color:var(--muted);font-size:13px">NOT FOUND</span>`;
-    // Backend appends this row to the Google Sheet and reports back via sheet_synced.
-    if (d.sheet_synced) {
-      document.getElementById("syncBar").classList.add("show");
-    }
-    document.getElementById("resState").classList.add("show");
-    document.getElementById("analyzeBtn").disabled = false;
-  }
-
-  function showError() {
+// ── Analyze ───────────────────────────────────────────────────────────────────
+async function analyze() {
+  if (!file) return;
+  document.getElementById("idleState").style.display = "none";
+  document.getElementById("resState").classList.remove("show");
+  document.getElementById("resErr").classList.remove("show");
+  document.getElementById("analyzeBtn").disabled = true;
+  document.getElementById("procState").classList.add("show");
+  animateSteps();
+  try {
+    const b64  = await toB64(file);
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "analyze", imageData: b64, mediaType: file.type || "image/jpeg" })
+    });
+    if (!resp.ok) throw new Error("API error");
+    const result = await resp.json();
+    populateResults(result);
+  } catch(err) {
+    console.error(err);
     document.getElementById("procState").classList.remove("show");
     document.getElementById("resErr").classList.add("show");
     document.getElementById("idleState").style.display = "";
     document.getElementById("analyzeBtn").disabled = false;
   }
+}
 
-  function reset() {
-    file = null;
-    document.getElementById("fileIn").value = "";
-    document.getElementById("filePill").classList.remove("show");
-    document.getElementById("analyzeBtn").disabled = true;
-    document.getElementById("resState").classList.remove("show");
-    document.getElementById("syncBar").classList.remove("show");
-    document.getElementById("resErr").classList.remove("show");
-    document.getElementById("idleState").style.display = "";
-    ["ps1","ps2","ps3","ps4"].forEach(id => {
-      const el = document.getElementById(id);
-      el.classList.remove("on","done");
+function animateSteps() {
+  ["ps1","ps2","ps3","ps4"].forEach((id,i) => {
+    setTimeout(() => {
+      if (i > 0) { document.getElementById(`ps${i}`).classList.remove("on"); document.getElementById(`ps${i}`).classList.add("done"); }
+      document.getElementById(id).classList.add("on");
+    }, i * 1800);
+  });
+}
+
+// ── Populate editable results (Change 5) ─────────────────────────────────────
+function populateResults(d) {
+  document.getElementById("procState").classList.remove("show");
+
+  // Patient Info
+  document.getElementById("fPatientName").value = d.patient_name || "";
+  document.getElementById("fDOB").value          = d.dob          || "";
+  document.getElementById("fDOS").value          = d.dos          || "";
+  updateRecordKey();
+
+  // Diagnoses
+  const dxList = document.getElementById("dxList");
+  dxList.innerHTML = "";
+  const dxs = Array.isArray(d.diagnoses) ? d.diagnoses : [];
+  if (dxs.length === 0) addDx("");
+  else dxs.forEach(dx => addDx(dx));
+
+  // ICD-10 codes
+  const icdList = document.getElementById("icdList");
+  icdList.innerHTML = "";
+  const codes = Array.isArray(d.icd10_codes) ? d.icd10_codes : [];
+  if (codes.length === 0) addICD("","");
+  else codes.forEach(c => addICD(c.code || "", c.description || ""));
+
+  // Clear messages
+  document.getElementById("exportErr").classList.remove("show");
+  document.getElementById("exportOk").classList.remove("show");
+
+  document.getElementById("resState").classList.add("show");
+  document.getElementById("analyzeBtn").disabled = false;
+}
+
+// ── Record Key builder (Change 3) ─────────────────────────────────────────────
+function buildRecordKey(name, dob, dos) {
+  let last = "", first = "";
+  if (name && name.includes(",")) {
+    [last, first] = name.split(",").map(s => s.trim().toUpperCase().replace(/\s+/g,""));
+  } else if (name) {
+    const parts = name.trim().toUpperCase().split(/\s+/);
+    first = parts[0] || "";
+    last  = parts.slice(1).join("") || "";
+  }
+  function toMMDDYYYY(s) {
+    if (!s) return "";
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s.replace(/\//g,"");
+    if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split("-"); return `${m}${d}${y}`; }
+    return s.replace(/[^0-9]/g,"");
+  }
+  if (!last && !first && !dob && !dos) return "";
+  return `${last}_${first}_${toMMDDYYYY(dob)}_${toMMDDYYYY(dos)}`;
+}
+function updateRecordKey() {
+  document.getElementById("fRecordKey").value = buildRecordKey(
+    document.getElementById("fPatientName").value,
+    document.getElementById("fDOB").value,
+    document.getElementById("fDOS").value
+  );
+}
+
+// ── Diagnoses list (Change 5) ─────────────────────────────────────────────────
+function addDx(val="") {
+  const wrap = document.getElementById("dxList");
+  const div  = document.createElement("div");
+  div.className = "dx-item";
+  div.innerHTML = `<input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}"/>
+    <button class="rm-btn" onclick="this.parentElement.remove()">✕</button>`;
+  wrap.appendChild(div);
+}
+
+// ── ICD-10 list (Change 5) ────────────────────────────────────────────────────
+let _icdSearchTarget = null;
+function addICD(code="", desc="") {
+  const wrap = document.getElementById("icdList");
+  const div  = document.createElement("div");
+  div.className = "icd-item";
+  div.innerHTML = `
+    <div class="icd-top">
+      <input class="field-input icd-code-input" type="text" placeholder="E11.65" value="${escHtml(code)}"/>
+      <input class="field-input icd-desc-input" type="text" placeholder="Description…" value="${escHtml(desc)}"/>
+      <div class="icd-actions">
+        <button class="search-icd-btn" onclick="openIcdSearch(this)">🔍 Search</button>
+        <button class="rm-btn" onclick="this.closest('.icd-item').remove()">✕</button>
+      </div>
+    </div>`;
+  wrap.appendChild(div);
+}
+
+function openIcdSearch(btn) {
+  _icdSearchTarget = btn.closest(".icd-item");
+  document.getElementById("icdSearchInput").value = "";
+  document.getElementById("icdResults").innerHTML = `<p class="modal-msg">Type above to search the CMS ICD-10-CM database.</p>`;
+  document.getElementById("icdModal").classList.add("show");
+  setTimeout(() => document.getElementById("icdSearchInput").focus(), 100);
+}
+function closeIcdModal() { document.getElementById("icdModal").classList.remove("show"); }
+function closeIcdModalOutside(e) { if (e.target === document.getElementById("icdModal")) closeIcdModal(); }
+
+async function searchICD() {
+  const q = document.getElementById("icdSearchInput").value.trim();
+  if (!q) return;
+  const resultsEl = document.getElementById("icdResults");
+  resultsEl.innerHTML = `<p class="modal-msg">Searching…</p>`;
+  try {
+    const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=10`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    // data[3] = array of [code, description]
+    const items = data[3] || [];
+    if (!items.length) { resultsEl.innerHTML = `<p class="modal-msg">No results found.</p>`; return; }
+    resultsEl.innerHTML = items.map(([c,d]) =>
+      `<div class="modal-result-item" onclick="selectICDResult('${escHtml(c)}','${escHtml(d)}')">
+         <span class="modal-result-code">${escHtml(c)}</span>
+         <span class="modal-result-desc">${escHtml(d)}</span>
+       </div>`
+    ).join("");
+  } catch(e) {
+    resultsEl.innerHTML = `<p class="modal-msg">Search failed. Check your connection.</p>`;
+  }
+}
+
+function selectICDResult(code, desc) {
+  if (!_icdSearchTarget) return;
+  _icdSearchTarget.querySelector(".icd-code-input").value = code;
+  _icdSearchTarget.querySelector(".icd-desc-input").value = desc;
+  closeIcdModal();
+}
+
+// ── Export As (Change 6) ──────────────────────────────────────────────────────
+function toggleExportMenu() {
+  document.getElementById("exportMenu").classList.toggle("open");
+}
+document.addEventListener("click", e => {
+  if (!document.getElementById("exportWrap").contains(e.target)) {
+    document.getElementById("exportMenu").classList.remove("open");
+  }
+});
+
+function collectData() {
+  const name  = document.getElementById("fPatientName").value.trim();
+  const dob   = document.getElementById("fDOB").value.trim();
+  const dos   = document.getElementById("fDOS").value.trim();
+  const key   = document.getElementById("fRecordKey").value.trim();
+  const dxs   = Array.from(document.querySelectorAll("#dxList .field-input")).map(i=>i.value.trim()).filter(Boolean);
+  const codes = Array.from(document.querySelectorAll("#icdList .icd-item")).map(el => ({
+    code:        el.querySelector(".icd-code-input").value.trim(),
+    description: el.querySelector(".icd-desc-input").value.trim()
+  })).filter(c => c.code);
+  return { patientName: name, dob, dos, recordKey: key, diagnoses: dxs, icd10Codes: codes };
+}
+
+function validateData(d) {
+  if (!d.patientName) return "Patient Name is required.";
+  if (!d.dob)         return "Date of Birth is required.";
+  if (!d.icd10Codes.length) return "At least one ICD-10 code is required.";
+  return null;
+}
+
+let _dupResolve = null;
+function resolvedup(choice) {
+  document.getElementById("dupOverlay").classList.remove("show");
+  if (_dupResolve) _dupResolve(choice);
+}
+
+async function doExport(type) {
+  document.getElementById("exportMenu").classList.remove("open");
+  const errEl = document.getElementById("exportErr");
+  const okEl  = document.getElementById("exportOk");
+  errEl.classList.remove("show");
+  okEl.classList.remove("show");
+
+  const d    = collectData();
+  const verr = validateData(d);
+  if (verr) { errEl.textContent = verr; errEl.classList.add("show"); return; }
+
+  if (type === "sheets") {
+    const tabName = document.getElementById("tabSelect").value || "Sheet1";
+    // Check for duplicates by reading all rows
+    let operation = "add";
+    try {
+      const checkResp = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "checkDuplicate", sheetId: SHEET_ID, tabName, recordKey: d.recordKey })
+      });
+      const check = await checkResp.json();
+      if (check.exists) {
+        operation = await new Promise(resolve => {
+          _dupResolve = resolve;
+          document.getElementById("dupOverlay").classList.add("show");
+        });
+        if (operation === "add") operation = "add";
+        else operation = "update";
+      }
+    } catch(e) { /* proceed as add if check fails */ }
+
+    try {
+      const resp = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "syncSheet", sheetId: SHEET_ID, tabName, operation, data: d })
+      });
+      const res = await resp.json();
+      if (!resp.ok || !res.success) throw new Error(res.error || "Transfer failed");
+      okEl.innerHTML = `✅ Successfully transferred to <strong>${escHtml(tabName)}</strong>!`;
+      okEl.classList.add("show");
+    } catch(err) {
+      errEl.textContent = "Transfer failed: " + err.message;
+      errEl.classList.add("show");
+    }
+    return;
+  }
+
+  if (type === "xlsx") { downloadXLSX(d); return; }
+  if (type === "docx") { downloadDOCX(d); return; }
+}
+
+// ── Excel download (Change 6) ─────────────────────────────────────────────────
+function downloadXLSX(d) {
+  const now = new Date();
+  const dateSubmitted = `${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}/${now.getFullYear()}`;
+  const diagStr  = d.diagnoses.join(", ");
+  const codesStr = d.icd10Codes.map(c=>`${c.code} - ${c.description}`).join(", ");
+
+  // Build minimal XLSX (Office Open XML) in memory
+  const rows = [
+    ["Patient Name","Date of Birth","Date of Service","Diagnoses","ICD-10 Codes","Record Key","Date Submitted"],
+    [d.patientName, d.dob, d.dos, diagStr, codesStr, d.recordKey, dateSubmitted]
+  ];
+
+  // Use a data URI approach with a CSV-formatted XLSX stub via SheetJS-style manual XML
+  const ws_xml = buildWorksheetXML(rows);
+  const wb_xml = buildWorkbookXML();
+  const zip_b64 = buildXLSXBase64(ws_xml, wb_xml);
+
+  const lastName = (d.patientName.split(",")[0] || d.patientName.split(" ").slice(-1)[0] || "Patient").trim().toUpperCase();
+  const dosClean = d.dos.replace(/\//g,"");
+  const filename = `MedCodeSnap_${lastName}_${dosClean}.xlsx`;
+
+  const link = document.createElement("a");
+  link.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + zip_b64;
+  link.download = filename;
+  link.click();
+
+  document.getElementById("exportOk").innerHTML = "✅ Excel file downloaded!";
+  document.getElementById("exportOk").classList.add("show");
+}
+
+// Simple XLSX builder without external libraries
+function escXML(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function buildWorksheetXML(rows) {
+  let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>`;
+  rows.forEach((row,ri) => {
+    xml += `<row r="${ri+1}">`;
+    row.forEach((cell,ci) => {
+      const col = String.fromCharCode(65+ci);
+      xml += `<c r="${col}${ri+1}" t="inlineStr"><is><t>${escXML(cell)}</t></is></c>`;
     });
-    document.getElementById("ps1").classList.add("on");
+    xml += `</row>`;
+  });
+  xml += `</sheetData></worksheet>`;
+  return xml;
+}
+function buildWorkbookXML() {
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="MedCodeSnap" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+}
+
+// Build XLSX base64 using JS native Uint8Array — minimal ZIP
+function buildXLSXBase64(wsXML, wbXML) {
+  // We'll construct the XLSX as a proper zip using a tiny runtime zip builder
+  const files = {
+    "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`,
+    "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    "xl/workbook.xml": wbXML,
+    "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
+    "xl/worksheets/sheet1.xml": wsXML
+  };
+  return simpleZipBase64(files);
+}
+
+function simpleZipBase64(files) {
+  // Tiny uncompressed ZIP builder
+  const enc = new TextEncoder();
+  const parts = [];
+  const centralDir = [];
+  let offset = 0;
+
+  for (const [name, content] of Object.entries(files)) {
+    const nameBytes    = enc.encode(name);
+    const contentBytes = enc.encode(content);
+    const crc = crc32(contentBytes);
+    const size = contentBytes.length;
+
+    const localHeader = buildLocalFileHeader(nameBytes, size, crc);
+    parts.push(localHeader, contentBytes);
+
+    centralDir.push(buildCentralDirEntry(nameBytes, size, crc, offset));
+    offset += localHeader.length + contentBytes.length;
   }
 
-  function toB64(f) {
-    return new Promise((res,rej) => {
-      const r = new FileReader();
-      r.onload = () => res(r.result.split(",")[1]);
-      r.onerror = rej;
-      r.readAsDataURL(f);
-    });
-  }
+  const centralDirBytes = concat(centralDir);
+  const eocd = buildEOCD(Object.keys(files).length, centralDirBytes.length, offset);
+  const allBytes = concat([...parts, centralDirBytes, eocd]);
 
-  // ---- Feedback ----
-  let fbType = 'Bug';
-  function openFeedback() {
-    document.getElementById("fbOverlay").classList.add("show");
-    document.getElementById("fbForm").style.display = "block";
-    document.getElementById("fbThanks").style.display = "none";
-    document.getElementById("fbText").value = "";
+  // Base64 encode
+  let binary = "";
+  allBytes.forEach(b => binary += String.fromCharCode(b));
+  return btoa(binary);
+}
+
+function crc32(buf) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) {
+    let b = (crc ^ buf[i]) & 0xff;
+    for (let j = 0; j < 8; j++) b = (b & 1) ? (b >>> 1) ^ 0xEDB88320 : b >>> 1;
+    crc = (crc >>> 8) ^ b;
   }
-  function closeFeedback() {
-    document.getElementById("fbOverlay").classList.remove("show");
-  }
-  function closeFeedbackOutside(e) {
-    if (e.target === document.getElementById("fbOverlay")) closeFeedback();
-  }
-  function selectType(el, type) {
-    fbType = type;
-    document.querySelectorAll(".fb-type").forEach(t => t.classList.remove("active"));
-    el.classList.add("active");
-  }
-  function sendFeedback() {
-    const msg = document.getElementById("fbText").value.trim();
-    if (!msg) { document.getElementById("fbText").focus(); return; }
-    const subject = encodeURIComponent(`MedCodeSnap Feedback: ${fbType}`);
-    const body = encodeURIComponent(`Type: ${fbType}\n\n${msg}`);
-    window.open(`mailto:patty@medcodesnap.com?subject=${subject}&body=${body}`);
-    document.getElementById("fbForm").style.display = "none";
-    document.getElementById("fbThanks").style.display = "block";
-    setTimeout(closeFeedback, 3000);
-  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function u32LE(n) { return new Uint8Array([n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]); }
+function u16LE(n) { return new Uint8Array([n&0xff,(n>>8)&0xff]); }
+function concat(arrs) {
+  const len = arrs.reduce((s,a) => s+a.length,0);
+  const out = new Uint8Array(len);
+  let pos = 0;
+  arrs.forEach(a => { out.set(a, pos); pos += a.length; });
+  return out;
+}
+
+function buildLocalFileHeader(nameBytes, size, crc) {
+  return concat([
+    new Uint8Array([0x50,0x4B,0x03,0x04]), // signature
+    u16LE(20),       // version needed
+    u16LE(0),        // flags
+    u16LE(0),        // compression = store
+    u16LE(0),        // mod time
+    u16LE(0),        // mod date
+    u32LE(crc),
+    u32LE(size),     // compressed
+    u32LE(size),     // uncompressed
+    u16LE(nameBytes.length),
+    u16LE(0),        // extra
+    nameBytes
+  ]);
+}
+function buildCentralDirEntry(nameBytes, size, crc, offset) {
+  return concat([
+    new Uint8Array([0x50,0x4B,0x01,0x02]),
+    u16LE(20), u16LE(20), u16LE(0), u16LE(0),
+    u16LE(0), u16LE(0),
+    u32LE(crc), u32LE(size), u32LE(size),
+    u16LE(nameBytes.length), u16LE(0), u16LE(0),
+    u16LE(0), u16LE(0), u32LE(0),
+    u32LE(offset),
+    nameBytes
+  ]);
+}
+function buildEOCD(count, cdSize, cdOffset) {
+  return concat([
+    new Uint8Array([0x50,0x4B,0x05,0x06]),
+    u16LE(0), u16LE(0),
+    u16LE(count), u16LE(count),
+    u32LE(cdSize), u32LE(cdOffset),
+    u16LE(0)
+  ]);
+}
+
+// ── Word download (Change 6) ──────────────────────────────────────────────────
+function downloadDOCX(d) {
+  const now = new Date();
+  const dateSubmitted = `${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}/${now.getFullYear()}`;
+
+  const dxListXML = d.diagnoses.length
+    ? d.diagnoses.map((dx,i) => `<w:p><w:r><w:t>${i+1}. ${escXML(dx)}</w:t></w:r></w:p>`).join("")
+    : `<w:p><w:r><w:t>—</w:t></w:r></w:p>`;
+
+  const icdListXML = d.icd10Codes.length
+    ? d.icd10Codes.map((c,i) => `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>${i+1}. ${escXML(c.code)}</w:t></w:r><w:r><w:t xml:space="preserve"> — ${escXML(c.description)}</w:t></w:r></w:p>`).join("")
+    : `<w:p><w:r><w:t>—</w:t></w:r></w:p>`;
+
+  const docXML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+  <w:p><w:pPr><w:jc w:val="center"/><w:shd w:val="clear" w:color="auto" w:fill="1E3D50"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="00C896"/></w:rPr><w:t>MEDCODESNAP</w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="607080"/></w:rPr><w:t>Coding Results Report</w:t></w:r></w:p>
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>Patient Information</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Name: </w:t></w:r><w:r><w:t>${escXML(d.patientName)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Date of Birth: </w:t></w:r><w:r><w:t>${escXML(d.dob)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Date of Service: </w:t></w:r><w:r><w:t>${escXML(d.dos)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Record Key: </w:t></w:r><w:r><w:rPr><w:color w:val="00a87e"/></w:rPr><w:t>${escXML(d.recordKey)}</w:t></w:r></w:p>
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>Diagnoses</w:t></w:r></w:p>
+  ${dxListXML}
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>ICD-10-CM Codes</w:t></w:r></w:p>
+  ${icdListXML}
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="right"/></w:pPr>
+    <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="607080"/></w:rPr><w:t xml:space="preserve">Date Submitted: ${escXML(dateSubmitted)}</w:t></w:r></w:p>
+</w:body></w:document>`;
+
+  const files = {
+    "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`,
+    "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
+    "word/document.xml": docXML
+  };
+
+  const lastName = (d.patientName.split(",")[0] || d.patientName.split(" ").slice(-1)[0] || "Patient").trim().toUpperCase();
+  const dosClean = d.dos.replace(/\//g,"");
+  const filename = `MedCodeSnap_${lastName}_${dosClean}.docx`;
+
+  const zip_b64 = simpleZipBase64(files);
+  const link = document.createElement("a");
+  link.href = "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + zip_b64;
+  link.download = filename;
+  link.click();
+
+  document.getElementById("exportOk").innerHTML = "✅ Word document downloaded!";
+  document.getElementById("exportOk").classList.add("show");
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function escHtml(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+function toB64(f) {
+  return new Promise((res,rej) => {
+    const r = new FileReader();
+    r.onload  = () => res(r.result.split(",")[1]);
+    r.onerror = rej;
+    r.readAsDataURL(f);
+  });
+}
+
+function reset() {
+  file = null;
+  document.getElementById("fileIn").value = "";
+  document.getElementById("filePill").classList.remove("show");
+  document.getElementById("analyzeBtn").disabled = true;
+  document.getElementById("resState").classList.remove("show");
+  document.getElementById("resErr").classList.remove("show");
+  document.getElementById("exportErr").classList.remove("show");
+  document.getElementById("exportOk").classList.remove("show");
+  document.getElementById("idleState").style.display = "";
+  ["ps1","ps2","ps3","ps4"].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove("on","done");
+  });
+  document.getElementById("ps1").classList.add("on");
+  loadTabs();
+}
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+let fbType = "Bug";
+function openFeedback() {
+  document.getElementById("fbOverlay").classList.add("show");
+  document.getElementById("fbForm").style.display = "block";
+  document.getElementById("fbThanks").style.display = "none";
+  document.getElementById("fbText").value = "";
+}
+function closeFeedback() { document.getElementById("fbOverlay").classList.remove("show"); }
+function closeFeedbackOutside(e) { if (e.target === document.getElementById("fbOverlay")) closeFeedback(); }
+function selectType(el, type) {
+  fbType = type;
+  document.querySelectorAll(".fb-type").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+}
+function sendFeedback() {
+  const msg = document.getElementById("fbText").value.trim();
+  if (!msg) { document.getElementById("fbText").focus(); return; }
+  const subject = encodeURIComponent(`MedCodeSnap Feedback: ${fbType}`);
+  const body    = encodeURIComponent(`Type: ${fbType}\n\n${msg}`);
+  window.open(`mailto:patty@medcodesnap.com?subject=${subject}&body=${body}`);
+  document.getElementById("fbForm").style.display = "none";
+  document.getElementById("fbThanks").style.display = "block";
+  setTimeout(closeFeedback, 3000);
+}
 </script>
 </body>
 </html>
