@@ -270,6 +270,23 @@
       .feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
     }
 
+    /* Diagnosis autocomplete */
+    .dx-ac-wrap { position: relative; flex: 1; }
+    .dx-ac-dropdown {
+      position: absolute; top: calc(100% + 3px); left: 0; right: 0; z-index: 300;
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1); overflow: hidden; display: none;
+    }
+    .dx-ac-dropdown.open { display: block; }
+    .dx-ac-item {
+      padding: 9px 13px; font-size: 12px; color: var(--text); cursor: pointer;
+      transition: background 0.12s; border-bottom: 1px solid var(--border);
+      line-height: 1.4;
+    }
+    .dx-ac-item:last-child { border-bottom: none; }
+    .dx-ac-item:hover, .dx-ac-item.active { background: var(--success-bg); color: var(--teal-dark); }
+    .dx-ac-item strong { font-weight: 700; }
+
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
   </style>
@@ -635,14 +652,64 @@ function updateRecordKey() {
   );
 }
 
-// ── Diagnoses list (Change 5) ─────────────────────────────────────────────────
+// ── Diagnoses list with autocomplete (Fix 2) ─────────────────────────────────
 function addDx(val="") {
   const wrap = document.getElementById("dxList");
   const div  = document.createElement("div");
   div.className = "dx-item";
-  div.innerHTML = `<input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}"/>
-    <button class="rm-btn" onclick="this.parentElement.remove()">✕</button>`;
+  div.innerHTML = `
+    <div class="dx-ac-wrap">
+      <input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}" autocomplete="off"/>
+      <div class="dx-ac-dropdown"></div>
+    </div>
+    <button class="rm-btn" onclick="this.closest('.dx-item').remove()">✕</button>`;
   wrap.appendChild(div);
+  setupDxAutocomplete(div.querySelector("input"), div.querySelector(".dx-ac-dropdown"));
+}
+
+function debounce(fn, ms) {
+  let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+function setupDxAutocomplete(input, dropdown) {
+  let acIdx = -1;
+
+  const search = debounce(async (q) => {
+    q = q.trim();
+    if (q.length < 2) { dropdown.classList.remove("open"); return; }
+    try {
+      const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=8&sf=code,name&df=code,name`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      const items = data[3] || [];
+      if (!items.length) { dropdown.classList.remove("open"); return; }
+      acIdx = -1;
+      dropdown.innerHTML = items.map(([code, name]) => {
+        const hl = name.replace(new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi'), '<strong>$1</strong>');
+        return `<div class="dx-ac-item" data-desc="${escHtml(name)}">${hl}</div>`;
+      }).join("");
+      dropdown.querySelectorAll(".dx-ac-item").forEach(item => {
+        item.addEventListener("mousedown", e => {
+          e.preventDefault();
+          input.value = item.dataset.desc;
+          dropdown.classList.remove("open");
+        });
+      });
+      dropdown.classList.add("open");
+    } catch(e) { dropdown.classList.remove("open"); }
+  }, 300);
+
+  input.addEventListener("input",  () => search(input.value));
+  input.addEventListener("blur",   () => setTimeout(() => dropdown.classList.remove("open"), 150));
+  input.addEventListener("focus",  () => { if (input.value.trim().length >= 2) search(input.value); });
+  input.addEventListener("keydown", e => {
+    const items = dropdown.querySelectorAll(".dx-ac-item");
+    if (!items.length || !dropdown.classList.contains("open")) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); acIdx = Math.min(acIdx+1, items.length-1); items.forEach((it,i) => it.classList.toggle("active", i===acIdx)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); acIdx = Math.max(acIdx-1, 0); items.forEach((it,i) => it.classList.toggle("active", i===acIdx)); }
+    else if (e.key === "Enter" && acIdx >= 0) { e.preventDefault(); input.value = items[acIdx].dataset.desc; dropdown.classList.remove("open"); }
+    else if (e.key === "Escape") { dropdown.classList.remove("open"); }
+  });
 }
 
 // ── ICD-10 list (Change 5) ────────────────────────────────────────────────────
@@ -673,24 +740,33 @@ function openIcdSearch(btn) {
 function closeIcdModal() { document.getElementById("icdModal").classList.remove("show"); }
 function closeIcdModalOutside(e) { if (e.target === document.getElementById("icdModal")) closeIcdModal(); }
 
+// Fix 1: must include sf=code,name&df=code,name or API returns empty results
+let _icdSearchResults = []; // store results array to avoid inline-string escaping issues
+
 async function searchICD() {
   const q = document.getElementById("icdSearchInput").value.trim();
   if (!q) return;
   const resultsEl = document.getElementById("icdResults");
   resultsEl.innerHTML = `<p class="modal-msg">Searching…</p>`;
   try {
-    const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=10`;
+    const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=10&sf=code,name&df=code,name`;
     const resp = await fetch(url);
     const data = await resp.json();
-    // data[3] = array of [code, description]
-    const items = data[3] || [];
-    if (!items.length) { resultsEl.innerHTML = `<p class="modal-msg">No results found.</p>`; return; }
-    resultsEl.innerHTML = items.map(([c,d]) =>
-      `<div class="modal-result-item" onclick="selectICDResult('${escHtml(c)}','${escHtml(d)}')">
+    // data[3] = array of [code, name] pairs when df=code,name is set
+    _icdSearchResults = data[3] || [];
+    if (!_icdSearchResults.length) { resultsEl.innerHTML = `<p class="modal-msg">No results found.</p>`; return; }
+    resultsEl.innerHTML = _icdSearchResults.map(([c, d], i) =>
+      `<div class="modal-result-item" data-idx="${i}">
          <span class="modal-result-code">${escHtml(c)}</span>
          <span class="modal-result-desc">${escHtml(d)}</span>
        </div>`
     ).join("");
+    resultsEl.querySelectorAll(".modal-result-item").forEach(el => {
+      el.addEventListener("click", () => {
+        const [code, desc] = _icdSearchResults[parseInt(el.dataset.idx)];
+        selectICDResult(code, desc);
+      });
+    });
   } catch(e) {
     resultsEl.innerHTML = `<p class="modal-msg">Search failed. Check your connection.</p>`;
   }

@@ -183,9 +183,10 @@ exports.handler = async function (event) {
       const creds = JSON.parse(credsJson);
       const accessToken = await getGoogleAccessToken(creds);
 
+      // Col D = diagnosis descriptions only; Col E = ICD-10 codes only (no descriptions)
       const diagStr  = Array.isArray(d.diagnoses) ? d.diagnoses.join(", ") : (d.diagnoses || "");
       const codesStr = Array.isArray(d.icd10Codes)
-        ? d.icd10Codes.map(c => `${c.code} - ${c.description}`).join(", ")
+        ? d.icd10Codes.map(c => c.code).join(", ")
         : (d.icd10Codes || "");
 
       const recordKey = buildRecordKey(d.patientName, d.dob, d.dos);
