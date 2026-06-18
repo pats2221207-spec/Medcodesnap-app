@@ -289,7 +289,8 @@ If any field cannot be determined, return it as empty string or empty array — 
     };
 
   } catch (err) {
-    console.error("Function error:", err);
+    // PHI SAFETY: log only error name and message
+    console.error("Function error:", err.name || "Error", "-", err.message);
     return {
       statusCode: 500,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
