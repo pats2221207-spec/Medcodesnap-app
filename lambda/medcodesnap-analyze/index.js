@@ -4,8 +4,10 @@
 //   POST /api/analyze     → action:"syncSheet"
 //
 // Required environment variables:
-//   OPENAI_API_KEY              - OpenAI API key
-//   GOOGLE_SERVICE_ACCOUNT_JSON - Full JSON key for the Google service account
+//   AZURE_OPENAI_KEY              - Azure OpenAI API key
+//   AZURE_OPENAI_ENDPOINT         - Azure OpenAI resource endpoint (e.g. https://<resource>.cognitiveservices.azure.com)
+//   AZURE_OPENAI_DEPLOYMENT_NAME  - Azure OpenAI deployment name (e.g. gpt-4o)
+//   GOOGLE_SERVICE_ACCOUNT_JSON   - Full JSON key for the Google service account
 
 const crypto = require("crypto");
 
@@ -260,10 +262,15 @@ If any field cannot be determined, return it as empty string or empty array — 
       ];
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const AZURE_OPENAI_API_VERSION = "2025-01-01-preview";
+    const azureEndpoint   = (process.env.AZURE_OPENAI_ENDPOINT || "").replace(/\/+$/, "");
+    const azureDeployment = process.env.AZURE_OPENAI_DEPLOYMENT_NAME;
+    const azureUrl = `${azureEndpoint}/openai/deployments/${azureDeployment}/chat/completions?api-version=${AZURE_OPENAI_API_VERSION}`;
+
+    const response = await fetch(azureUrl, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.OPENAI_API_KEY}` },
-      body: JSON.stringify({ model: "gpt-4o", max_tokens: 1024, response_format: { type: "json_object" }, messages })
+      headers: { "Content-Type": "application/json", "api-key": process.env.AZURE_OPENAI_KEY },
+      body: JSON.stringify({ max_tokens: 1024, response_format: { type: "json_object" }, messages })
     });
 
     const aiData = await response.json();
