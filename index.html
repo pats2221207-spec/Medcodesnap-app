@@ -227,6 +227,25 @@
     .modal-cancel { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; color: var(--muted); font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
     .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
 
+    /* SIGNUP MODAL (export gate) */
+    .fl { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+    .fl label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .fl input {
+      border: 1px solid var(--border); border-radius: 8px; padding: 11px 13px; font-size: 14px; color: var(--text);
+      font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; width: 100%; background: var(--bg);
+    }
+    .fl input:focus { border-color: var(--teal); }
+    .fl input.err { border-color: var(--error-text); }
+    .form-err { font-size: 12px; color: var(--error-text); background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 7px; padding: 9px 12px; display: none; margin-bottom: 12px; }
+    .form-err.show { display: block; }
+    .su-sub { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+    .su-hint { font-size: 11px; color: var(--muted); line-height: 1.5; margin: -6px 0 14px; }
+    .su-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .su-resend { display: block; text-align: center; margin-top: 14px; font-size: 12px; color: var(--teal-dark); font-weight: 600; text-decoration: none; cursor: pointer; }
+    .su-resend:hover { text-decoration: underline; }
+    .go-dash-link { color: var(--teal-dark); font-weight: 700; text-decoration: none; margin-left: 6px; }
+    .go-dash-link:hover { text-decoration: underline; }
+
     /* FEEDBACK */
     .feedback-fab {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
@@ -487,6 +506,44 @@
     </div>
     <div class="modal-results" id="icdResults"><p class="modal-msg">Type above to search the CMS ICD-10-CM database.</p></div>
     <button class="modal-cancel" onclick="closeIcdModal()">Cancel</button>
+  </div>
+</div>
+
+<!-- SIGNUP MODAL (export gate, 3.2) -->
+<div class="fb-overlay" id="suOverlay" onclick="closeSuModalOutside(event)">
+  <div class="fb-modal" id="suModal">
+    <div id="suStep1">
+      <h3>Create your free account</h3>
+      <p class="su-sub">Sign up to export your results. Your analyzed note stays right here — nothing is lost.</p>
+      <div class="fl">
+        <label>Work Email</label>
+        <input type="email" id="suEmail" placeholder="you@practice.com" autocomplete="username"/>
+      </div>
+      <div class="fl">
+        <label>Password</label>
+        <input type="password" id="suPassword" placeholder="••••••••" autocomplete="new-password"/>
+      </div>
+      <div class="su-hint">Min 8 characters, with an uppercase letter, a number, and a special character.</div>
+      <div class="form-err" id="suErr"></div>
+      <div class="su-actions">
+        <button class="fb-cancel" onclick="closeSuModal()">Cancel</button>
+        <button class="fb-send" id="suSignUpBtn" onclick="handleSignUp()">Create Account →</button>
+      </div>
+    </div>
+    <div id="suStep2" style="display:none;">
+      <h3>Check your email</h3>
+      <p class="su-sub">We sent a verification code to <strong id="suConfirmEmail"></strong>. Enter it below to finish creating your account — your results are still right here.</p>
+      <div class="fl">
+        <label>Verification Code</label>
+        <input type="text" id="suCode" placeholder="123456" inputmode="numeric"/>
+      </div>
+      <div class="form-err" id="suConfirmErr"></div>
+      <div class="su-actions">
+        <button class="fb-cancel" onclick="closeSuModal()">Cancel</button>
+        <button class="fb-send" id="suConfirmBtn" onclick="handleConfirmSignUp()">Verify &amp; Continue →</button>
+      </div>
+      <a href="#" class="su-resend" onclick="resendCode(); return false;">Didn't get a code? Resend</a>
+    </div>
   </div>
 </div>
 
@@ -843,12 +900,7 @@ RTN 4 weeks or sooner if sx worsen.
     closeIcdModal();
   }
 
-  // ── Export As ───────────────────────────────────────────────────────────
-  // NOTE (Phase 1 stub): the real signup-gate modal + Excel/Word/Sheets fork
-  // ships in Phase 3 (3.2). For now, clicking export fires export_attempted
-  // and shows a placeholder — no file is generated and nothing is sent
-  // anywhere yet. This keeps the public page deployable mid-build without
-  // accidentally shipping ungated exports.
+  // ── Export As (3.2: gated by signup) ─────────────────────────────────────
   function toggleExportMenu() {
     document.getElementById("exportMenu").classList.toggle("open");
   }
@@ -858,14 +910,395 @@ RTN 4 weeks or sooner if sx worsen.
     }
   });
 
+  function collectData() {
+    const name  = document.getElementById("fPatientName").value.trim();
+    const dob   = document.getElementById("fDOB").value.trim();
+    const dos   = document.getElementById("fDOS").value.trim();
+    const key   = document.getElementById("fRecordKey").value.trim();
+    const dxs   = Array.from(document.querySelectorAll("#dxList .field-input")).map(i=>i.value.trim()).filter(Boolean);
+    const codes = Array.from(document.querySelectorAll("#icdList .icd-item")).map(el => ({
+      code:        el.querySelector(".icd-code-input").value.trim(),
+      description: el.querySelector(".icd-desc-input").value.trim()
+    })).filter(c => c.code);
+    return { patientName: name, dob, dos, recordKey: key, diagnoses: dxs, icd10Codes: codes };
+  }
+
+  function validateData(d) {
+    if (!d.patientName) return "Patient Name is required.";
+    if (!d.dob)         return "Date of Birth is required.";
+    if (!d.icd10Codes.length) return "At least one ICD-10 code is required.";
+    return null;
+  }
+
+  // doExport: validate first, then either export immediately (already signed
+  // up this session) or open the signup modal and remember which button was
+  // clicked so the right fork runs after signup completes.
   function doExport(type) {
     document.getElementById("exportMenu").classList.remove("open");
     gtag('event', 'export_attempted', {event_category: 'engagement', export_type: type});
+
     const errEl = document.getElementById("exportErr");
     const okEl  = document.getElementById("exportOk");
+    errEl.classList.remove("show");
     okEl.classList.remove("show");
-    errEl.textContent = "Sign-up is required to export — coming in the next phase of this build.";
-    errEl.classList.add("show");
+
+    const d    = collectData();
+    const verr = validateData(d);
+    if (verr) { errEl.textContent = verr; errEl.classList.add("show"); return; }
+
+    if (localStorage.getItem("mcs_id_token")) {
+      runExport(type, d);
+      return;
+    }
+    openSuModal(type);
+  }
+
+  function runExport(type, d) {
+    if (type === "xlsx") { downloadXLSX(d); showGoToDashboard(); }
+    else if (type === "docx") { downloadDOCX(d); showGoToDashboard(); }
+    else if (type === "sheets") {
+      // Carry-over persistence (3.3) ships in Phase 4 — for now this lands in
+      // whatever the normal /dashboard Sheets wizard shows today.
+      window.location.href = "/dashboard?pending=sheets";
+    }
+  }
+
+  function showGoToDashboard() {
+    const okEl = document.getElementById("exportOk");
+    okEl.innerHTML = 'Exported! <a href="/dashboard" class="go-dash-link">Go to your dashboard →</a>';
+    okEl.classList.add("show");
+  }
+
+  // ── Signup modal (Cognito SignUp + ConfirmSignUp, two-step) ──────────────
+  const COGNITO_REGION = "us-west-1";
+  const COGNITO_CLIENT_ID = "3cst6juv3rbrn7b2h4efkfr3hj";
+  const COGNITO_ENDPOINT = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
+
+  let pendingExportType = null;
+  let pendingSuEmail = null;
+  let pendingSuPassword = null;
+
+  async function cognitoRequest(target, body) {
+    const resp = await fetch(COGNITO_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-amz-json-1.1",
+        "X-Amz-Target": `AWSCognitoIdentityProviderService.${target}`
+      },
+      body: JSON.stringify(body)
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const err = new Error(data.message || data.__type || "Request failed");
+      err.type = data.__type;
+      throw err;
+    }
+    return data;
+  }
+
+  function storeSession(tokens, email) {
+    localStorage.setItem("mcs_id_token", tokens.IdToken);
+    localStorage.setItem("mcs_access_token", tokens.AccessToken);
+    localStorage.setItem("mcs_refresh_token", tokens.RefreshToken || "");
+    localStorage.setItem("mcs_email", email);
+  }
+
+  function openSuModal(exportType) {
+    pendingExportType = exportType;
+    document.getElementById("suStep1").style.display = "block";
+    document.getElementById("suStep2").style.display = "none";
+    document.getElementById("suEmail").value = "";
+    document.getElementById("suPassword").value = "";
+    document.getElementById("suEmail").classList.remove("err");
+    document.getElementById("suPassword").classList.remove("err");
+    document.getElementById("suErr").classList.remove("show");
+    document.getElementById("suOverlay").classList.add("show");
+    setTimeout(() => document.getElementById("suEmail").focus(), 100);
+  }
+  function closeSuModal() { document.getElementById("suOverlay").classList.remove("show"); }
+  function closeSuModalOutside(e) { if (e.target === document.getElementById("suOverlay")) closeSuModal(); }
+
+  async function handleSignUp() {
+    const email = document.getElementById("suEmail").value.trim();
+    const password = document.getElementById("suPassword").value;
+    const errBox = document.getElementById("suErr");
+    errBox.classList.remove("show");
+    document.getElementById("suEmail").classList.remove("err");
+    document.getElementById("suPassword").classList.remove("err");
+
+    if (!email || !password) {
+      document.getElementById("suEmail").classList.toggle("err", !email);
+      document.getElementById("suPassword").classList.toggle("err", !password);
+      errBox.textContent = "Please enter your email and a password.";
+      errBox.classList.add("show");
+      return;
+    }
+
+    const btn = document.getElementById("suSignUpBtn");
+    btn.disabled = true; btn.textContent = "Creating account…";
+    try {
+      await cognitoRequest("SignUp", {
+        ClientId: COGNITO_CLIENT_ID,
+        Username: email,
+        Password: password,
+        UserAttributes: [{ Name: "email", Value: email }]
+      });
+      pendingSuEmail = email;
+      pendingSuPassword = password;
+      document.getElementById("suConfirmEmail").textContent = email;
+      document.getElementById("suStep1").style.display = "none";
+      document.getElementById("suStep2").style.display = "block";
+      document.getElementById("suConfirmErr").classList.remove("show");
+      setTimeout(() => document.getElementById("suCode").focus(), 100);
+    } catch (err) {
+      errBox.textContent = err.message || "Could not create account. Please try again.";
+      errBox.classList.add("show");
+    } finally {
+      btn.disabled = false; btn.textContent = "Create Account →";
+    }
+  }
+
+  async function handleConfirmSignUp() {
+    const code = document.getElementById("suCode").value.trim();
+    const errBox = document.getElementById("suConfirmErr");
+    errBox.style.color = "var(--error-text)";
+    errBox.classList.remove("show");
+    if (!code) {
+      errBox.textContent = "Please enter the verification code.";
+      errBox.classList.add("show");
+      return;
+    }
+    const btn = document.getElementById("suConfirmBtn");
+    btn.disabled = true; btn.textContent = "Verifying…";
+    try {
+      await cognitoRequest("ConfirmSignUp", {
+        ClientId: COGNITO_CLIENT_ID,
+        Username: pendingSuEmail,
+        ConfirmationCode: code
+      });
+      // ConfirmSignUp doesn't return tokens — sign in immediately so the
+      // dashboard auth-guard and returning-user routing work right away.
+      const auth = await cognitoRequest("InitiateAuth", {
+        AuthFlow: "USER_PASSWORD_AUTH",
+        ClientId: COGNITO_CLIENT_ID,
+        AuthParameters: { USERNAME: pendingSuEmail, PASSWORD: pendingSuPassword }
+      });
+      storeSession(auth.AuthenticationResult, pendingSuEmail);
+      gtag('event', 'trial_started', {event_category: 'engagement'});
+      closeSuModal();
+      const type = pendingExportType;
+      pendingExportType = null;
+      runExport(type, collectData());
+    } catch (err) {
+      errBox.textContent = err.message || "Invalid or expired code. Please try again.";
+      errBox.classList.add("show");
+    } finally {
+      btn.disabled = false; btn.textContent = "Verify & Continue →";
+    }
+  }
+
+  async function resendCode() {
+    if (!pendingSuEmail) return;
+    const errBox = document.getElementById("suConfirmErr");
+    try {
+      await cognitoRequest("ResendConfirmationCode", { ClientId: COGNITO_CLIENT_ID, Username: pendingSuEmail });
+      errBox.style.color = "var(--teal-dark)";
+      errBox.textContent = "A new code has been sent.";
+      errBox.classList.add("show");
+    } catch (err) {
+      errBox.style.color = "var(--error-text)";
+      errBox.textContent = err.message || "Could not resend code. Please try again.";
+      errBox.classList.add("show");
+    }
+  }
+
+  // ── Excel download (lifted from /dashboard) ──────────────────────────────
+  function downloadXLSX(d) {
+    const now = new Date();
+    const dateSubmitted = `${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}/${now.getFullYear()}`;
+    const diagStr  = d.diagnoses.join(", ");
+    const codesStr = d.icd10Codes.map(c=>`${c.code} - ${c.description}`).join(", ");
+
+    const rows = [
+      ["Patient Name","Date of Birth","Date of Service","Diagnoses","ICD-10 Codes","Record Key","Date Submitted"],
+      [d.patientName, d.dob, d.dos, diagStr, codesStr, d.recordKey, dateSubmitted]
+    ];
+
+    const ws_xml = buildWorksheetXML(rows);
+    const wb_xml = buildWorkbookXML();
+    const zip_b64 = buildXLSXBase64(ws_xml, wb_xml);
+
+    const lastName = (d.patientName.split(",")[0] || d.patientName.split(" ").slice(-1)[0] || "Patient").trim().toUpperCase();
+    const dosClean = d.dos.replace(/\//g,"");
+    const filename = `MedCodeSnap_${lastName}_${dosClean}.xlsx`;
+
+    const link = document.createElement("a");
+    link.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + zip_b64;
+    link.download = filename;
+    link.click();
+  }
+
+  function escXML(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function buildWorksheetXML(rows) {
+    let xml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>`;
+    rows.forEach((row,ri) => {
+      xml += `<row r="${ri+1}">`;
+      row.forEach((cell,ci) => {
+        const col = String.fromCharCode(65+ci);
+        xml += `<c r="${col}${ri+1}" t="inlineStr"><is><t>${escXML(cell)}</t></is></c>`;
+      });
+      xml += `</row>`;
+    });
+    xml += `</sheetData></worksheet>`;
+    return xml;
+  }
+  function buildWorkbookXML() {
+    return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="MedCodeSnap" sheetId="1" r:id="rId1"/></sheets></workbook>`;
+  }
+  function buildXLSXBase64(wsXML, wbXML) {
+    const files = {
+      "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`,
+      "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+      "xl/workbook.xml": wbXML,
+      "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`,
+      "xl/worksheets/sheet1.xml": wsXML
+    };
+    return simpleZipBase64(files);
+  }
+
+  function simpleZipBase64(files) {
+    const enc = new TextEncoder();
+    const parts = [];
+    const centralDir = [];
+    let offset = 0;
+
+    for (const [name, content] of Object.entries(files)) {
+      const nameBytes    = enc.encode(name);
+      const contentBytes = enc.encode(content);
+      const crc = crc32(contentBytes);
+      const size = contentBytes.length;
+
+      const localHeader = buildLocalFileHeader(nameBytes, size, crc);
+      parts.push(localHeader, contentBytes);
+
+      centralDir.push(buildCentralDirEntry(nameBytes, size, crc, offset));
+      offset += localHeader.length + contentBytes.length;
+    }
+
+    const centralDirBytes = concat(centralDir);
+    const eocd = buildEOCD(Object.keys(files).length, centralDirBytes.length, offset);
+    const allBytes = concat([...parts, centralDirBytes, eocd]);
+
+    let binary = "";
+    allBytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
+
+  function crc32(buf) {
+    let crc = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) {
+      let b = (crc ^ buf[i]) & 0xff;
+      for (let j = 0; j < 8; j++) b = (b & 1) ? (b >>> 1) ^ 0xEDB88320 : b >>> 1;
+      crc = (crc >>> 8) ^ b;
+    }
+    return (crc ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function u32LE(n) { return new Uint8Array([n&0xff,(n>>8)&0xff,(n>>16)&0xff,(n>>24)&0xff]); }
+  function u16LE(n) { return new Uint8Array([n&0xff,(n>>8)&0xff]); }
+  function concat(arrs) {
+    const len = arrs.reduce((s,a) => s+a.length,0);
+    const out = new Uint8Array(len);
+    let pos = 0;
+    arrs.forEach(a => { out.set(a, pos); pos += a.length; });
+    return out;
+  }
+
+  function buildLocalFileHeader(nameBytes, size, crc) {
+    return concat([
+      new Uint8Array([0x50,0x4B,0x03,0x04]),
+      u16LE(20), u16LE(0), u16LE(0), u16LE(0), u16LE(0),
+      u32LE(crc), u32LE(size), u32LE(size),
+      u16LE(nameBytes.length), u16LE(0),
+      nameBytes
+    ]);
+  }
+  function buildCentralDirEntry(nameBytes, size, crc, offset) {
+    return concat([
+      new Uint8Array([0x50,0x4B,0x01,0x02]),
+      u16LE(20), u16LE(20), u16LE(0), u16LE(0),
+      u16LE(0), u16LE(0),
+      u32LE(crc), u32LE(size), u32LE(size),
+      u16LE(nameBytes.length), u16LE(0), u16LE(0),
+      u16LE(0), u16LE(0), u32LE(0),
+      u32LE(offset),
+      nameBytes
+    ]);
+  }
+  function buildEOCD(count, cdSize, cdOffset) {
+    return concat([
+      new Uint8Array([0x50,0x4B,0x05,0x06]),
+      u16LE(0), u16LE(0),
+      u16LE(count), u16LE(count),
+      u32LE(cdSize), u32LE(cdOffset),
+      u16LE(0)
+    ]);
+  }
+
+  // ── Word download (lifted from /dashboard) ───────────────────────────────
+  function downloadDOCX(d) {
+    const now = new Date();
+    const dateSubmitted = `${String(now.getMonth()+1).padStart(2,"0")}/${String(now.getDate()).padStart(2,"0")}/${now.getFullYear()}`;
+
+    const dxListXML = d.diagnoses.length
+      ? d.diagnoses.map((dx,i) => `<w:p><w:r><w:t>${i+1}. ${escXML(dx)}</w:t></w:r></w:p>`).join("")
+      : `<w:p><w:r><w:t>—</w:t></w:r></w:p>`;
+
+    const icdListXML = d.icd10Codes.length
+      ? d.icd10Codes.map((c,i) => `<w:p><w:r><w:rPr><w:b/></w:rPr><w:t>${i+1}. ${escXML(c.code)}</w:t></w:r><w:r><w:t xml:space="preserve"> — ${escXML(c.description)}</w:t></w:r></w:p>`).join("")
+      : `<w:p><w:r><w:t>—</w:t></w:r></w:p>`;
+
+    const docXML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+  <w:p><w:pPr><w:jc w:val="center"/><w:shd w:val="clear" w:color="auto" w:fill="1E3D50"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="00C896"/></w:rPr><w:t>MEDCODESNAP</w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="center"/></w:pPr>
+    <w:r><w:rPr><w:sz w:val="20"/><w:color w:val="607080"/></w:rPr><w:t>Coding Results Report</w:t></w:r></w:p>
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>Patient Information</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Name: </w:t></w:r><w:r><w:t>${escXML(d.patientName)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Date of Birth: </w:t></w:r><w:r><w:t>${escXML(d.dob)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Date of Service: </w:t></w:r><w:r><w:t>${escXML(d.dos)}</w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/></w:rPr><w:t xml:space="preserve">Record Key: </w:t></w:r><w:r><w:rPr><w:color w:val="00a87e"/></w:rPr><w:t>${escXML(d.recordKey)}</w:t></w:r></w:p>
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>Diagnoses</w:t></w:r></w:p>
+  ${dxListXML}
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:r><w:rPr><w:b/><w:sz w:val="24"/></w:rPr><w:t>ICD-10-CM Codes</w:t></w:r></w:p>
+  ${icdListXML}
+  <w:p><w:r><w:t> </w:t></w:r></w:p>
+  <w:p><w:pPr><w:jc w:val="right"/></w:pPr>
+    <w:r><w:rPr><w:sz w:val="18"/><w:color w:val="607080"/></w:rPr><w:t xml:space="preserve">Date Submitted: ${escXML(dateSubmitted)}</w:t></w:r></w:p>
+</w:body></w:document>`;
+
+    const files = {
+      "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`,
+      "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`,
+      "word/document.xml": docXML
+    };
+
+    const lastName = (d.patientName.split(",")[0] || d.patientName.split(" ").slice(-1)[0] || "Patient").trim().toUpperCase();
+    const dosClean = d.dos.replace(/\//g,"");
+    const filename = `MedCodeSnap_${lastName}_${dosClean}.docx`;
+
+    const zip_b64 = simpleZipBase64(files);
+    const link = document.createElement("a");
+    link.href = "data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64," + zip_b64;
+    link.download = filename;
+    link.click();
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
