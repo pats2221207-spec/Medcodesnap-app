@@ -21,6 +21,8 @@
       --muted:       #607080;
       --border:      #dce6ed;
       --success-bg:  #edfaf5;
+      --error-bg:    #fff0f0;
+      --error-text:  #c0392b;
     }
 
     html, body {
@@ -39,7 +41,16 @@
       box-shadow: 0 1px 0 rgba(0,0,0,0.18);
     }
     .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: var(--teal); letter-spacing: 0.06em; }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
     .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--teal); border: 1px solid var(--teal-border); background: var(--teal-dim); padding: 3px 10px; border-radius: 20px; }
+    .login-link {
+      background: transparent; color: rgba(255,255,255,0.75);
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 7px;
+      padding: 7px 14px; font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s;
+      text-decoration: none;
+    }
+    .login-link:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.3); }
 
     .shell { display: flex; height: 100vh; padding-top: 52px; }
 
@@ -50,34 +61,8 @@
     .left-top h1 em { color: var(--teal); font-style: normal; }
     .left-top p { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.6; }
 
-    /* GATE */
-    #gateWrap { padding: 24px 32px; display: flex; flex-direction: column; gap: 16px; }
-    .fl { display: flex; flex-direction: column; gap: 5px; }
-    .fl label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
-    .fl input, .fl select {
-      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13);
-      border-radius: 8px; padding: 11px 13px; font-size: 14px; color: #fff;
-      font-family: 'Inter', sans-serif; outline: none;
-      transition: border-color 0.2s, background 0.2s; width: 100%; -webkit-appearance: none;
-    }
-    .fl input::placeholder { color: rgba(255,255,255,0.25); }
-    .fl input:focus, .fl select:focus { border-color: var(--teal); background: rgba(255,255,255,0.1); }
-    .fl input.err { border-color: #ff6b6b; }
-    .fl select option { background: var(--slate); color: #fff; }
-
-    #gateErr { font-size: 12px; color: #ff8a7a; background: rgba(255,100,80,0.12); border: 1px solid rgba(255,100,80,0.25); border-radius: 7px; padding: 9px 12px; display: none; }
-    #gateErr.show { display: block; }
-
-    .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
-    .btn-teal:hover { background: var(--teal-dark); }
-    .btn-teal:active { transform: scale(0.985); }
-    .btn-teal:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .gate-fine { font-size: 11px; color: rgba(255,255,255,0.25); text-align: center; line-height: 1.6; }
-
-    /* UPLOAD */
-    #uploadWrap { padding: 24px 32px; display: none; flex-direction: column; gap: 18px; flex: 1; }
-    #uploadWrap.show { display: flex; }
-    .welcome-pill { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 8px; padding: 10px 14px; font-size: 13px; color: var(--teal); font-weight: 500; }
+    /* UPLOAD (no gate — visible immediately) */
+    #uploadWrap { padding: 24px 32px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
 
     .drop-zone {
       border: 2px dashed rgba(0,200,150,0.35); border-radius: 12px;
@@ -92,17 +77,15 @@
     .fmt-row { display: flex; justify-content: center; gap: 7px; margin-top: 12px; }
     .fmt { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 5px; padding: 2px 9px; font-size: 10px; font-weight: 700; color: var(--teal); letter-spacing: 0.05em; }
 
-    /* SAMPLE NOTE LINK */
-    ./* SAMPLE NOTE LINK */
-.sample-note-link {
-  display: block; background: transparent; cursor: pointer;
-  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
-  color: var(--teal); text-align: center; text-decoration: none;
-  border: 1.5px solid var(--teal-border); border-radius: 8px;
-  padding: 9px 14px; margin: -2px 0 0; align-self: center;
-  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
-}
-.sample-note-link:hover { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-dark); }
+    .sample-note-link {
+      display: block; background: transparent; cursor: pointer;
+      font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+      color: var(--teal); text-align: center; text-decoration: none;
+      border: 1.5px solid var(--teal-border); border-radius: 8px;
+      padding: 9px 14px; margin: -2px 0 0; align-self: center;
+      transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.1s;
+    }
+    .sample-note-link:hover { background: var(--teal-dim); border-color: var(--teal); color: var(--teal-dark); }
 
     .file-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 9px; padding: 11px 14px; display: none; align-items: center; gap: 10px; }
     .file-pill.show { display: flex; }
@@ -113,15 +96,15 @@
     .fp-rm { background: none; border: none; color: rgba(255,255,255,0.3); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
     .fp-rm:hover { color: #fff; }
 
+    .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
+    .btn-teal:hover { background: var(--teal-dark); }
+    .btn-teal:active { transform: scale(0.985); }
+    .btn-teal:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
     #analyzeBtn { display: none; }
     #analyzeBtn.show { display: block; }
     .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
 
-    .sync-blurb { margin: auto 32px 24px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 14px 16px; font-size: 12px; color: rgba(255,255,255,0.4); line-height: 1.6; display: none; }
-    .sync-blurb.show { display: block; }
-    .sync-blurb strong { color: rgba(255,255,255,0.65); }
-    .sync-blurb a { color: var(--teal); text-decoration: none; font-weight: 600; }
-    .sync-blurb a:hover { text-decoration: underline; }
+    .free-pill { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--teal); font-weight: 500; line-height: 1.5; }
 
     /* RIGHT */
     .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border); }
@@ -153,39 +136,98 @@
     .pd { width: 6px; height: 6px; min-width: 6px; border-radius: 50%; background: var(--border); transition: background 0.25s; }
     .ps.on .pd, .ps.done .pd { background: var(--teal); }
 
-    /* RESULTS */
-    #resState { display: none; flex-direction: column; gap: 13px; }
+    /* RESULTS (V2 editable component, lifted from /dashboard) */
+    #resState { display: none; flex-direction: column; gap: 16px; }
     #resState.show { display: flex; }
     .ok-bar { background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; padding: 10px 14px; font-size: 13px; color: var(--teal-dark); font-weight: 500; display: flex; align-items: center; gap: 8px; }
     .rc { background: var(--card); border: 1px solid var(--border); border-radius: 11px; overflow: hidden; }
     .rc-head { padding: 9px 15px; background: var(--slate); display: flex; align-items: center; gap: 7px; }
     .rc-head span { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.45); }
     .rcdot { width: 5px; height: 5px; border-radius: 50%; background: var(--teal); }
-    .rc-body { padding: 13px 15px; }
-    .rf { display: flex; flex-direction: column; gap: 3px; padding: 8px 0; border-bottom: 1px solid var(--border); }
-    .rf:last-child { border-bottom: none; padding-bottom: 0; }
-    .rf:first-child { padding-top: 0; }
-    .rl { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-    .rv { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.5; }
-    .rv.mono { font-family: 'Courier New', monospace; font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 5px; color: var(--teal-dark); font-weight: 700; display: inline-block; }
-    .chips { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 3px; }
-    .chip { background: var(--success-bg); color: var(--teal-dark); border: 1px solid rgba(0,200,150,0.22); border-radius: 5px; padding: 3px 9px; font-size: 12px; font-weight: 700; font-family: 'Courier New', monospace; }
+    .rc-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
 
-    /* BUTTON ROW */
-    .btn-row { display: flex; gap: 10px; align-items: center; }
-    .ghost-btn { flex: 1; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; white-space: nowrap; }
-    .ghost-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
-    .founder-btn { flex: 2; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; white-space: nowrap; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 12px rgba(0,200,150,0.35); }
-    .founder-btn:hover { background: var(--teal-dark); transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,200,150,0.45); }
-    .founder-btn:active { transform: scale(0.985); }
+    .field-row { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .field-input {
+      border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px;
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--text);
+      background: var(--bg); outline: none; transition: border-color 0.18s; width: 100%;
+    }
+    .field-input:focus { border-color: var(--teal); }
+    .field-input[readonly] { background: #eef2f6; cursor: default; font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--teal-dark); }
 
-    #resErr { background: #fff0f0; border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: #c0392b; display: none; line-height: 1.5; }
+    .dx-item { display: flex; gap: 8px; align-items: center; }
+    .dx-item input { flex: 1; }
+    .rm-btn { background: none; border: 1px solid var(--border); border-radius: 6px; color: var(--muted); cursor: pointer; font-size: 14px; padding: 4px 8px; line-height: 1; transition: all 0.15s; flex-shrink: 0; }
+    .rm-btn:hover { border-color: var(--error-text); color: var(--error-text); }
+    .add-btn { display: flex; align-items: center; gap: 6px; background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 7px; color: var(--teal-dark); font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; padding: 6px 12px; cursor: pointer; transition: all 0.18s; width: fit-content; }
+    .add-btn:hover { background: rgba(0,200,150,0.2); }
+
+    .icd-item { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .icd-top { display: flex; gap: 8px; align-items: center; }
+    .icd-code-input { width: 120px; flex-shrink: 0; font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--teal-dark); }
+    .icd-desc-input { flex: 1; font-size: 12px; }
+    .icd-actions { display: flex; gap: 6px; align-items: center; }
+    .search-icd-btn { background: var(--slate); color: rgba(255,255,255,0.8); border: none; border-radius: 6px; padding: 5px 10px; font-size: 11px; font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .search-icd-btn:hover { background: var(--slate-mid); }
+
+    .export-wrap { position: relative; }
+    .export-btn {
+      width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px;
+      padding: 13px 16px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.18s;
+    }
+    .export-btn:hover { background: var(--teal-dark); }
+    .export-caret { font-size: 10px; }
+    .export-menu {
+      position: absolute; bottom: calc(100% + 6px); left: 0; right: 0;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12); overflow: hidden;
+      display: none; z-index: 50;
+    }
+    .export-menu.open { display: block; }
+    .export-option {
+      padding: 13px 16px; font-size: 13px; font-weight: 600; color: var(--text);
+      cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .export-option:last-child { border-bottom: none; }
+    .export-option:hover { background: var(--bg); }
+
+    .reset-btn { width: 100%; background: transparent; color: var(--muted); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 12px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .reset-btn:hover { border-color: var(--teal); color: var(--teal-dark); }
+
+    .inline-err { font-size: 12px; color: var(--error-text); font-weight: 500; padding: 8px 12px; background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 7px; display: none; }
+    .inline-err.show { display: block; }
+    .inline-ok  { font-size: 13px; color: var(--teal-dark); font-weight: 600; padding: 10px 14px; background: var(--success-bg); border: 1px solid rgba(0,200,150,0.28); border-radius: 9px; display: none; }
+    .inline-ok.show { display: flex; align-items: center; gap: 8px; }
+
+    #resErr { background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: var(--error-text); display: none; line-height: 1.5; }
     #resErr.show { display: block; }
 
     .foot { padding: 12px 30px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
     .foot p { font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
 
-    /* FEEDBACK BUTTON */
+    /* ICD-10 Search Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.show { display: flex; }
+    .modal-box { background: var(--card); border-radius: 16px; padding: 24px; width: 100%; max-width: 460px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 14px; }
+    .modal-box h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+    .modal-search-row { display: flex; gap: 8px; }
+    .modal-search-input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font-family: 'Inter', sans-serif; font-size: 13px; outline: none; transition: border-color 0.18s; }
+    .modal-search-input:focus { border-color: var(--teal); }
+    .modal-search-btn { background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .modal-results { max-height: 240px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .modal-result-item { padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: all 0.15s; display: flex; gap: 10px; align-items: flex-start; }
+    .modal-result-item:hover { background: var(--success-bg); border-color: var(--teal-border); }
+    .modal-result-code { font-family: 'Courier New', monospace; font-size: 13px; font-weight: 700; color: var(--teal-dark); white-space: nowrap; }
+    .modal-result-desc { font-size: 12px; color: var(--text); line-height: 1.4; }
+    .modal-msg { font-size: 13px; color: var(--muted); text-align: center; padding: 12px 0; }
+    .modal-cancel { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; color: var(--muted); font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
+    .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
+
+    /* FEEDBACK */
     .feedback-fab {
       position: fixed; bottom: 24px; right: 24px; z-index: 999;
       background: var(--slate); color: rgba(255,255,255,0.7);
@@ -198,7 +240,6 @@
     .feedback-fab:hover { background: var(--slate-mid); color: #fff; border-color: var(--teal-border); }
     .feedback-fab .fab-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); }
 
-    /* FEEDBACK MODAL */
     .fb-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .fb-overlay.show { display: flex; }
     .fb-modal { background: var(--card); border-radius: 16px; padding: 28px; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
@@ -231,31 +272,46 @@
     .sn-actions .fb-cancel { flex: 1; }
     .sn-actions .fb-send { flex: 2; }
 
+    /* Shared autocomplete popup */
+    .ac-popup {
+      position: fixed; z-index: 9999;
+      background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.13); overflow-y: auto;
+      display: none; max-height: 220px;
+    }
+    .ac-popup.open { display: block; }
+    .ac-item {
+      padding: 9px 13px; font-size: 12px; color: var(--text); cursor: pointer;
+      transition: background 0.12s; border-bottom: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: baseline; line-height: 1.4;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.active { background: var(--success-bg); color: var(--teal-dark); }
+    .ac-item-code { font-family: 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--teal-dark); white-space: nowrap; flex-shrink: 0; }
+    .ac-item-desc { font-size: 12px; color: var(--text); }
+
     @media (max-width: 480px) {
       .fb-modal, .sn-modal { max-width: 100%; width: 100%; border-radius: 12px; padding: 20px; }
       .sn-modal { max-height: 90vh; }
       .sn-actions { flex-direction: column-reverse; }
       .sn-actions .fb-cancel, .sn-actions .fb-send { flex: 1; width: 100%; }
     }
-@media (max-width: 768px) {
-html, body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
-.shell { flex-direction: column; height: auto; min-height: calc(100vh - 52px); }
-nav { padding: 0 16px; }
-.left, .right { width: 100%; max-width: 100%; min-width: 0; flex: none; overflow-y: visible; }
-.left { flex-shrink: 0; }
-.right { border-left: none; border-top: 1px solid var(--border); }
-.left-top { padding: 20px 20px 16px; }
-.left-top h1 { font-size: 19px; }
-.left-top p { font-size: 12px; }
-#gateWrap, #uploadWrap { padding: 18px 20px; }
-.sync-blurb { margin: 16px 20px 20px; }
-.right-head { padding: 18px 20px 14px; }
-.right-body { padding: 18px 20px; }
-.btn-row { flex-direction: column; gap: 10px; }
-.ghost-btn, .founder-btn { flex: none; width: 100%; }
-.feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
-.fp-name { max-width: 150px; }
-}
+    @media (max-width: 768px) {
+      html, body { height: auto; min-height: 100%; overflow: visible; overflow-x: hidden; }
+      .shell { flex-direction: column; height: auto; min-height: calc(100vh - 52px); }
+      nav { padding: 0 16px; }
+      .left, .right { width: 100%; max-width: 100%; min-width: 0; flex: none; overflow-y: visible; }
+      .left { flex-shrink: 0; }
+      .right { border-left: none; border-top: 1px solid var(--border); }
+      .left-top { padding: 20px 20px 16px; }
+      .left-top h1 { font-size: 19px; }
+      .left-top p { font-size: 12px; }
+      #uploadWrap { padding: 18px 20px; }
+      .right-head { padding: 18px 20px 14px; }
+      .right-body { padding: 18px 20px; }
+      .feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
+      .fp-name { max-width: 150px; }
+    }
 
     ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
@@ -266,13 +322,21 @@ nav { padding: 0 16px; }
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'G-TVHGG4R4PV');
+
+    // Returning-user routing (3.7): logged-in visitors never see the public demo again.
+    if (localStorage.getItem("mcs_id_token")) {
+      window.location.href = "/dashboard";
+    }
   </script>
 </head>
 <body>
 
 <nav>
   <div class="logo">MEDCODESNAP</div>
-  <div class="badge">Now Live</div>
+  <div class="nav-right">
+    <div class="badge">Now Live</div>
+    <a href="/login" class="login-link">Log In</a>
+  </div>
 </nav>
 
 <div class="shell">
@@ -281,37 +345,11 @@ nav { padding: 0 16px; }
   <div class="left">
     <div class="left-top">
       <h1>Clinical notes to<br><em>ICD-10 codes.</em><br>Instantly.</h1>
-      <p>Upload any clinical note — photo, scan, or PDF. Results appear on the right in seconds.</p>
-    </div>
-
-    <div id="gateWrap">
-      <div class="fl">
-        <label>Full Name *</label>
-        <input type="text" id="gName" placeholder="First and last name" autocomplete="name"/>
-      </div>
-      <div class="fl">
-        <label>Work Email *</label>
-        <input type="email" id="gEmail" placeholder="you@practice.com" autocomplete="email"/>
-      </div>
-      <div class="fl">
-        <label>Your Role *</label>
-        <select id="gRole">
-          <option value="" disabled selected>Select your role…</option>
-          <option>Medical Coder</option>
-          <option>Practice Manager</option>
-          <option>Nurse Practitioner</option>
-          <option>Physician</option>
-          <option>Billing Specialist</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div id="gateErr">Please complete all fields before continuing.</div>
-      <button class="btn-teal" onclick="unlock()">Access the Demo Tool →</button>
-      <p class="gate-fine">🔒 No credit card · Early access only · Use fictional notes only</p>
+      <p>Upload any clinical note — photo, scan, or PDF. Results appear on the right in seconds. No sign-up required to try it.</p>
     </div>
 
     <div id="uploadWrap">
-      <div class="welcome-pill" id="welcomePill"></div>
+      <div class="free-pill">✨ Free to try, no account needed. Sign up only if you want to export your results.</div>
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileIn" accept=".jpg,.jpeg,.png,.pdf" onchange="onFile(this)"/>
         <div class="drop-icon">📋</div>
@@ -335,30 +373,28 @@ nav { padding: 0 16px; }
       <button class="btn-teal" id="analyzeBtn" onclick="analyze()">Analyze &amp; Extract Codes →</button>
       <p class="upload-fine">⚠️ Early access demo — use fictional or fully de-identified notes only.</p>
     </div>
-
-    <div class="sync-blurb" id="syncBlurb">
-      <strong>In the full product,</strong> your results sync automatically to Google Sheets, Excel, or export as a Word document — just like you'll see in the <a href="#" id="demoLink">demo video →</a>
-    </div>
   </div>
 
   <!-- RIGHT -->
   <div class="right">
     <div class="right-head">
       <h2>Coding Results</h2>
-      <p id="rightSub">Enter your details on the left to get started.</p>
+      <p id="rightSub">Upload a note on the left to get started.</p>
     </div>
     <div class="right-body">
+
       <div id="idleState">
         <div class="idle-ring">⚡</div>
         <h3>Ready when you are</h3>
         <p>Upload a clinical note on the left. Results appear here in seconds.</p>
         <div class="how-steps">
-          <div class="how-step"><div class="hn">1</div><div class="ht">Enter your details to access the tool</div></div>
-          <div class="how-step"><div class="hn">2</div><div class="ht">Upload a note — photo, scan, or PDF</div></div>
-          <div class="how-step"><div class="hn">3</div><div class="ht">AI reads the note and assigns ICD-10-CM codes</div></div>
-          <div class="how-step"><div class="hn">4</div><div class="ht">Results appear here instantly</div></div>
+          <div class="how-step"><div class="hn">1</div><div class="ht">Upload a note — photo, scan, or PDF</div></div>
+          <div class="how-step"><div class="hn">2</div><div class="ht">AI reads the note and assigns ICD-10-CM codes</div></div>
+          <div class="how-step"><div class="hn">3</div><div class="ht">Results appear here instantly — review and edit freely</div></div>
+          <div class="how-step"><div class="hn">4</div><div class="ht">Sign up only when you're ready to export</div></div>
         </div>
       </div>
+
       <div id="procState">
         <div class="spinner"></div>
         <h3>Reading your note…</h3>
@@ -369,42 +405,89 @@ nav { padding: 0 16px; }
           <div class="ps" id="ps4"><div class="pd"></div>Preparing your results</div>
         </div>
       </div>
+
+      <!-- Results: V2 editable component, lifted from /dashboard -->
       <div id="resState">
-        <div class="ok-bar">✅ Coding complete</div>
+        <div class="ok-bar">✅ Coding complete — review and edit below before exporting</div>
+
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Patient Info</span></div>
           <div class="rc-body">
-            <div class="rf"><div class="rl">Patient Name</div><div class="rv" id="rPt">—</div></div>
-            <div class="rf"><div class="rl">Record Key</div><div class="rv mono" id="rKey">—</div></div>
-            <div class="rf"><div class="rl">Date of Service</div><div class="rv" id="rDate">—</div></div>
+            <div class="field-row">
+              <div class="field-label">Patient Name <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fPatientName" type="text" placeholder="Last, First" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Date of Birth <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fDOB" type="text" placeholder="MM/DD/YYYY" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Date of Service <span style="color:var(--error-text)">*</span></div>
+              <input class="field-input" id="fDOS" type="text" placeholder="MM/DD/YYYY" oninput="updateRecordKey()"/>
+            </div>
+            <div class="field-row">
+              <div class="field-label">Record Key (auto-generated)</div>
+              <input class="field-input" id="fRecordKey" type="text" readonly/>
+            </div>
           </div>
         </div>
+
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>Diagnoses</span></div>
           <div class="rc-body">
-            <div class="rv" id="rDx" style="line-height:1.8;">—</div>
+            <div id="dxList" style="display:flex;flex-direction:column;gap:8px;"></div>
+            <button class="add-btn" onclick="addDx()">➕ Add diagnosis</button>
           </div>
         </div>
+
         <div class="rc">
           <div class="rc-head"><div class="rcdot"></div><span>ICD-10-CM Codes</span></div>
           <div class="rc-body">
-            <div class="chips" id="rCodes"></div>
+            <div id="icdList" style="display:flex;flex-direction:column;gap:10px;"></div>
+            <button class="add-btn" onclick="addICD('','')">➕ Add ICD-10 code</button>
           </div>
         </div>
-        <div class="btn-row">
-          <button class="ghost-btn" onclick="reset()">Code another note →</button>
-          <a href="https://buy.stripe.com/7sY8wOgrHgWB2Uh822aAw01" target="_blank" class="founder-btn" onclick="gtag('event', 'founder_price_clicked', {event_category: 'engagement'})">🔒 Lock In Founder Price →</a>
+
+        <div class="inline-err" id="exportErr"></div>
+        <div class="inline-ok" id="exportOk"></div>
+
+        <div class="export-wrap" id="exportWrap">
+          <button class="export-btn" onclick="toggleExportMenu()">
+            Export As <span class="export-caret">▲</span>
+          </button>
+          <div class="export-menu" id="exportMenu">
+            <div class="export-option" onclick="doExport('sheets')">📊 Transfer to Google Sheets</div>
+            <div class="export-option" onclick="doExport('xlsx')">📗 Download as Excel (.xlsx)</div>
+            <div class="export-option" onclick="doExport('docx')">📄 Download as Word (.docx)</div>
+          </div>
         </div>
+
+        <button class="reset-btn" onclick="reset()">Code another note →</button>
       </div>
+
       <div id="resErr">
         Something went wrong reading your note. Please make sure the image is clear and try again. If the problem persists, email <a href="mailto:support@medcodesnap.com" style="color:var(--teal-dark)">support@medcodesnap.com</a>.
       </div>
+
     </div>
     <div class="foot">
       <p>Early access demo · Use fictional or de-identified notes only · Not HIPAA-compliant until full launch</p>
     </div>
   </div>
 
+</div>
+
+<!-- ICD-10 Search Modal -->
+<div class="modal-overlay" id="icdModal" onclick="closeIcdModalOutside(event)">
+  <div class="modal-box">
+    <h3>Search ICD-10 Codes</h3>
+    <div class="modal-search-row">
+      <input class="modal-search-input" id="icdSearchInput" type="text" placeholder="Search by keyword or code…" onkeydown="if(event.key==='Enter') searchICD()"/>
+      <button class="modal-search-btn" onclick="searchICD()">Search</button>
+    </div>
+    <div class="modal-results" id="icdResults"><p class="modal-msg">Type above to search the CMS ICD-10-CM database.</p></div>
+    <button class="modal-cancel" onclick="closeIcdModal()">Cancel</button>
+  </div>
 </div>
 
 <!-- FEEDBACK BUTTON -->
@@ -452,6 +535,8 @@ nav { padding: 0 16px; }
 </div>
 
 <script>
+  const API_URL = "https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze";
+
   const urlParams = new URLSearchParams(window.location.search);
   const utmSource = urlParams.get('utm_source');
   const utmMedium = urlParams.get('utm_medium');
@@ -460,7 +545,6 @@ nav { padding: 0 16px; }
     gtag('set', 'campaign', { source: utmSource, medium: utmMedium, name: utmCampaign });
   }
 
-  let user = {};
   let file = null;
   let fbType = 'Bug';
 
@@ -485,29 +569,7 @@ A/P:
 RTN 4 weeks or sooner if sx worsen.
 -Dr. M. Chen MD`;
 
-  function unlock() {
-    const n = document.getElementById("gName").value.trim();
-    const e = document.getElementById("gEmail").value.trim();
-    const r = document.getElementById("gRole").value;
-    const ok = n && e && r && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-    ["gName","gEmail"].forEach(id => document.getElementById(id).classList.remove("err"));
-    document.getElementById("gateErr").classList.remove("show");
-    if (!ok) {
-      if (!n) document.getElementById("gName").classList.add("err");
-      if (!e || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) document.getElementById("gEmail").classList.add("err");
-      document.getElementById("gateErr").classList.add("show");
-      return;
-    }
-    user = { name: n, email: e, role: r };
-    gtag('event', 'gate_form_submitted', {event_category: 'engagement'});
-    fetch("https://hook.us2.make.com/2jbldsbf9ud9nonxp7t3bfcehwrtihwo", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: n, email: e, role: r, date: new Date().toISOString() }) }).catch(() => {});
-    document.getElementById("gateWrap").style.display = "none";
-    document.getElementById("uploadWrap").classList.add("show");
-    document.getElementById("syncBlurb").classList.add("show");
-    document.getElementById("welcomePill").textContent = `👋 Welcome, ${n}! Upload a fictional clinical note below to see it coded live.`;
-    document.getElementById("rightSub").textContent = "Upload a note on the left — results appear here.";
-  }
-
+  // ── File handling ───────────────────────────────────────────────────────
   function onFile(input) {
     const f = input.files[0];
     if (!f) return;
@@ -517,14 +579,12 @@ RTN 4 weeks or sooner if sx worsen.
     document.getElementById("filePill").classList.add("show");
     document.getElementById("analyzeBtn").classList.add("show");
   }
-
   function clearFile() {
     file = null;
     document.getElementById("fileIn").value = "";
     document.getElementById("filePill").classList.remove("show");
     document.getElementById("analyzeBtn").classList.remove("show");
   }
-
   const dz = document.getElementById("dropZone");
   dz.addEventListener("dragover", e => { e.preventDefault(); dz.classList.add("over"); });
   dz.addEventListener("dragleave", () => dz.classList.remove("over"));
@@ -534,28 +594,32 @@ RTN 4 weeks or sooner if sx worsen.
     if (f) { file = f; onFile({files:[f]}); }
   });
 
+  // ── Analyze ─────────────────────────────────────────────────────────────
   async function analyze() {
     if (!file) return;
-    gtag('event', 'note_analyzed', {event_category: 'engagement'});
-    document.getElementById("uploadWrap").classList.remove("show");
-    document.getElementById("syncBlurb").classList.remove("show");
     document.getElementById("idleState").style.display = "none";
-    document.getElementById("procState").classList.add("show");
+    document.getElementById("resState").classList.remove("show");
     document.getElementById("resErr").classList.remove("show");
+    document.getElementById("analyzeBtn").classList.remove("show");
+    document.getElementById("procState").classList.add("show");
     animateSteps();
     try {
       const b64 = await toB64(file);
-      const resp = await fetch("https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze", {
+      const resp = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ imageData: b64, mediaType: file.type || "image/jpeg" })
       });
       if (!resp.ok) throw new Error("API error");
       const result = await resp.json();
-      showResults(result);
+      populateResults(result);
+      gtag('event', 'demo_completed', {event_category: 'engagement'});
     } catch(err) {
       console.error(err);
-      showError();
+      document.getElementById("procState").classList.remove("show");
+      document.getElementById("resErr").classList.add("show");
+      document.getElementById("idleState").style.display = "";
+      document.getElementById("analyzeBtn").classList.add("show");
     }
   }
 
@@ -571,47 +635,241 @@ RTN 4 weeks or sooner if sx worsen.
     });
   }
 
-  function showResults(d) {
+  // ── Populate editable results — mapped to the REAL API response shape
+  // (patient_name, dob, dos, diagnoses[], icd10_codes[{code,description}]) ──
+  function populateResults(d) {
     document.getElementById("procState").classList.remove("show");
-    document.getElementById("rPt").textContent   = d.patient_name || "NOT FOUND";
-    document.getElementById("rKey").textContent  = d.record_key   || "NOT FOUND";
-    document.getElementById("rDate").textContent = d.note_date    || "NOT FOUND";
-    const dxs = (d.diagnoses_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
-    document.getElementById("rDx").innerHTML = dxs.length
-      ? dxs.map((dx,i)=>`<div style="padding:2px 0">${i+1}. ${dx}</div>`).join("")
-      : "NOT FOUND";
-    const codes = (d.icd10_codes_comma_separated||"").split(",").map(s=>s.trim()).filter(Boolean);
-    document.getElementById("rCodes").innerHTML = codes.length
-      ? codes.map(c=>`<span class="chip">${c}</span>`).join("")
-      : `<span style="color:var(--muted);font-size:13px">NOT FOUND</span>`;
+
+    document.getElementById("fPatientName").value = d.patient_name || "";
+    document.getElementById("fDOB").value          = d.dob          || "";
+    document.getElementById("fDOS").value          = d.dos          || "";
+    updateRecordKey();
+
+    const dxList = document.getElementById("dxList");
+    dxList.innerHTML = "";
+    const dxs = Array.isArray(d.diagnoses) ? d.diagnoses : [];
+    if (dxs.length === 0) addDx("");
+    else dxs.forEach(dx => addDx(dx));
+
+    const icdList = document.getElementById("icdList");
+    icdList.innerHTML = "";
+    const codes = Array.isArray(d.icd10_codes) ? d.icd10_codes : [];
+    if (codes.length === 0) addICD("","");
+    else codes.forEach(c => addICD(c.code || "", c.description || ""));
+
+    document.getElementById("exportErr").classList.remove("show");
+    document.getElementById("exportOk").classList.remove("show");
+
     document.getElementById("resState").classList.add("show");
-    document.getElementById("syncBlurb").classList.add("show");
+    document.getElementById("rightSub").textContent = "Review and edit below — sign up only if you want to export.";
   }
 
-  function showError() {
-    document.getElementById("procState").classList.remove("show");
-    document.getElementById("resErr").classList.add("show");
-    document.getElementById("uploadWrap").classList.add("show");
-    document.getElementById("syncBlurb").classList.add("show");
+  // ── Record Key builder ──────────────────────────────────────────────────
+  function buildRecordKey(name, dob, dos) {
+    let last = "", first = "";
+    if (name && name.includes(",")) {
+      [last, first] = name.split(",").map(s => s.trim().toUpperCase().replace(/\s+/g,""));
+    } else if (name) {
+      const parts = name.trim().toUpperCase().split(/\s+/);
+      first = parts[0] || "";
+      last  = parts.slice(1).join("") || "";
+    }
+    function toMMDDYYYY(s) {
+      if (!s) return "";
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) return s.replace(/\//g,"");
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) { const [y,m,d]=s.split("-"); return `${m}${d}${y}`; }
+      return s.replace(/[^0-9]/g,"");
+    }
+    if (!last && !first && !dob && !dos) return "";
+    return `${last}_${first}_${toMMDDYYYY(dob)}_${toMMDDYYYY(dos)}`;
+  }
+  function updateRecordKey() {
+    document.getElementById("fRecordKey").value = buildRecordKey(
+      document.getElementById("fPatientName").value,
+      document.getElementById("fDOB").value,
+      document.getElementById("fDOS").value
+    );
   }
 
-  function reset() {
-    file = null;
-    document.getElementById("fileIn").value = "";
-    document.getElementById("filePill").classList.remove("show");
-    document.getElementById("analyzeBtn").classList.remove("show");
-    document.getElementById("resState").classList.remove("show");
-    document.getElementById("resErr").classList.remove("show");
-    document.getElementById("idleState").style.display = "";
-    document.getElementById("uploadWrap").classList.add("show");
-    document.getElementById("welcomePill").textContent = `👋 Welcome back, ${user.name}! Upload another note below.`;
-    ["ps1","ps2","ps3","ps4"].forEach(id => {
-      const el = document.getElementById(id);
-      el.classList.remove("on","done");
+  // ── Shared body-level autocomplete popup ───────────────────────────────
+  const _acPopup = document.createElement("div");
+  _acPopup.className = "ac-popup";
+  document.body.appendChild(_acPopup);
+
+  let _acActiveInput = null;
+  let _acResults     = [];
+  let _acIdx         = -1;
+
+  function _acPosition(input) {
+    const r = input.getBoundingClientRect();
+    _acPopup.style.top   = (r.bottom + 4) + "px";
+    _acPopup.style.left  = r.left + "px";
+    _acPopup.style.width = Math.max(r.width, 240) + "px";
+  }
+  function _acShow(input, results, onSelect) {
+    _acActiveInput = input;
+    _acResults     = results;
+    _acIdx         = -1;
+    _acPosition(input);
+    _acPopup.innerHTML = results.map(([code, name], i) =>
+      `<div class="ac-item" data-idx="${i}">
+         <span class="ac-item-code">${escHtml(code)}</span>
+         <span class="ac-item-desc">${escHtml(name)}</span>
+       </div>`
+    ).join("");
+    _acPopup.querySelectorAll(".ac-item").forEach(el => {
+      el.addEventListener("mousedown", e => {
+        e.preventDefault();
+        onSelect(_acResults[parseInt(el.dataset.idx)]);
+        _acHide();
+      });
     });
-    document.getElementById("ps1").classList.add("on");
+    _acPopup.classList.add("open");
+  }
+  function _acHide() {
+    _acPopup.classList.remove("open");
+    _acActiveInput = null;
+  }
+  window.addEventListener("scroll", () => { if (_acActiveInput) _acPosition(_acActiveInput); }, true);
+
+  function debounce(fn, ms) {
+    let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+  }
+  function setupAcInput(input, urlFn, onSelect) {
+    const search = debounce(async (q) => {
+      q = q.trim();
+      if (q.length < 2) { _acHide(); return; }
+      try {
+        const resp = await fetch(urlFn(q));
+        const data = await resp.json();
+        const items = data[3] || [];
+        if (!items.length) { _acHide(); return; }
+        _acShow(input, items, onSelect);
+      } catch(e) { _acHide(); }
+    }, 300);
+
+    input.addEventListener("input",  () => search(input.value));
+    input.addEventListener("blur",   () => setTimeout(_acHide, 150));
+    input.addEventListener("focus",  () => { if (input.value.trim().length >= 2) search(input.value); });
+    input.addEventListener("keydown", e => {
+      if (!_acPopup.classList.contains("open") || _acActiveInput !== input) return;
+      const items = _acPopup.querySelectorAll(".ac-item");
+      if (e.key === "ArrowDown") { e.preventDefault(); _acIdx = Math.min(_acIdx+1, items.length-1); items.forEach((it,i) => it.classList.toggle("active", i===_acIdx)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); _acIdx = Math.max(_acIdx-1, 0); items.forEach((it,i) => it.classList.toggle("active", i===_acIdx)); }
+      else if (e.key === "Enter" && _acIdx >= 0) { e.preventDefault(); onSelect(_acResults[_acIdx]); _acHide(); }
+      else if (e.key === "Escape") { _acHide(); }
+    });
+  }
+  const ICD_URL = q => `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=8&sf=code,name&df=code,name`;
+
+  // ── Diagnoses list ──────────────────────────────────────────────────────
+  function addDx(val="") {
+    const wrap = document.getElementById("dxList");
+    const div  = document.createElement("div");
+    div.className = "dx-item";
+    div.innerHTML = `
+      <input class="field-input" type="text" placeholder="Enter diagnosis…" value="${escHtml(val)}" autocomplete="off"/>
+      <button class="rm-btn" onclick="this.closest('.dx-item').remove()">✕</button>`;
+    wrap.appendChild(div);
+    const inp = div.querySelector("input");
+    setupAcInput(inp, ICD_URL, ([code, name]) => { inp.value = name; });
   }
 
+  // ── ICD-10 list ─────────────────────────────────────────────────────────
+  let _icdSearchTarget = null;
+  function addICD(code="", desc="") {
+    const wrap = document.getElementById("icdList");
+    const div  = document.createElement("div");
+    div.className = "icd-item";
+    div.innerHTML = `
+      <div class="icd-top">
+        <input class="field-input icd-code-input" type="text" placeholder="E11.65" value="${escHtml(code)}" autocomplete="off"/>
+        <input class="field-input icd-desc-input" type="text" placeholder="Description…" value="${escHtml(desc)}" autocomplete="off"/>
+        <div class="icd-actions">
+          <button class="search-icd-btn" onclick="openIcdSearch(this)">🔍 Search</button>
+          <button class="rm-btn" onclick="this.closest('.icd-item').remove()">✕</button>
+        </div>
+      </div>`;
+    wrap.appendChild(div);
+    const codeInp = div.querySelector(".icd-code-input");
+    const descInp = div.querySelector(".icd-desc-input");
+    const fill = ([c, n]) => { codeInp.value = c; descInp.value = n; };
+    setupAcInput(codeInp, ICD_URL, fill);
+    setupAcInput(descInp, ICD_URL, fill);
+  }
+
+  function openIcdSearch(btn) {
+    _icdSearchTarget = btn.closest(".icd-item");
+    document.getElementById("icdSearchInput").value = "";
+    document.getElementById("icdResults").innerHTML = `<p class="modal-msg">Type above to search the CMS ICD-10-CM database.</p>`;
+    document.getElementById("icdModal").classList.add("show");
+    setTimeout(() => document.getElementById("icdSearchInput").focus(), 100);
+  }
+  function closeIcdModal() { document.getElementById("icdModal").classList.remove("show"); }
+  function closeIcdModalOutside(e) { if (e.target === document.getElementById("icdModal")) closeIcdModal(); }
+
+  let _icdSearchResults = [];
+  async function searchICD() {
+    const q = document.getElementById("icdSearchInput").value.trim();
+    if (!q) return;
+    const resultsEl = document.getElementById("icdResults");
+    resultsEl.innerHTML = `<p class="modal-msg">Searching…</p>`;
+    try {
+      const url = `https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search?terms=${encodeURIComponent(q)}&maxList=10&sf=code,name&df=code,name`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      _icdSearchResults = data[3] || [];
+      if (!_icdSearchResults.length) { resultsEl.innerHTML = `<p class="modal-msg">No results found.</p>`; return; }
+      resultsEl.innerHTML = _icdSearchResults.map(([c, d], i) =>
+        `<div class="modal-result-item" data-idx="${i}">
+           <span class="modal-result-code">${escHtml(c)}</span>
+           <span class="modal-result-desc">${escHtml(d)}</span>
+         </div>`
+      ).join("");
+      resultsEl.querySelectorAll(".modal-result-item").forEach(el => {
+        el.addEventListener("click", () => {
+          const [code, desc] = _icdSearchResults[parseInt(el.dataset.idx)];
+          selectICDResult(code, desc);
+        });
+      });
+    } catch(e) {
+      resultsEl.innerHTML = `<p class="modal-msg">Search failed. Check your connection.</p>`;
+    }
+  }
+  function selectICDResult(code, desc) {
+    if (!_icdSearchTarget) return;
+    _icdSearchTarget.querySelector(".icd-code-input").value = code;
+    _icdSearchTarget.querySelector(".icd-desc-input").value = desc;
+    closeIcdModal();
+  }
+
+  // ── Export As ───────────────────────────────────────────────────────────
+  // NOTE (Phase 1 stub): the real signup-gate modal + Excel/Word/Sheets fork
+  // ships in Phase 3 (3.2). For now, clicking export fires export_attempted
+  // and shows a placeholder — no file is generated and nothing is sent
+  // anywhere yet. This keeps the public page deployable mid-build without
+  // accidentally shipping ungated exports.
+  function toggleExportMenu() {
+    document.getElementById("exportMenu").classList.toggle("open");
+  }
+  document.addEventListener("click", e => {
+    if (!document.getElementById("exportWrap").contains(e.target)) {
+      document.getElementById("exportMenu").classList.remove("open");
+    }
+  });
+
+  function doExport(type) {
+    document.getElementById("exportMenu").classList.remove("open");
+    gtag('event', 'export_attempted', {event_category: 'engagement', export_type: type});
+    const errEl = document.getElementById("exportErr");
+    const okEl  = document.getElementById("exportOk");
+    okEl.classList.remove("show");
+    errEl.textContent = "Sign-up is required to export — coming in the next phase of this build.";
+    errEl.classList.add("show");
+  }
+
+  // ── Helpers ─────────────────────────────────────────────────────────────
+  function escHtml(s) { return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function toB64(f) {
     return new Promise((res,rej) => {
       const r = new FileReader();
@@ -621,9 +879,23 @@ RTN 4 weeks or sooner if sx worsen.
     });
   }
 
-  ["gName","gEmail"].forEach(id => {
-    document.getElementById(id).addEventListener("keydown", e => { if(e.key==="Enter") unlock(); });
-  });
+  function reset() {
+    file = null;
+    document.getElementById("fileIn").value = "";
+    document.getElementById("filePill").classList.remove("show");
+    document.getElementById("analyzeBtn").classList.remove("show");
+    document.getElementById("resState").classList.remove("show");
+    document.getElementById("resErr").classList.remove("show");
+    document.getElementById("exportErr").classList.remove("show");
+    document.getElementById("exportOk").classList.remove("show");
+    document.getElementById("idleState").style.display = "";
+    document.getElementById("rightSub").textContent = "Upload a note on the left to get started.";
+    ["ps1","ps2","ps3","ps4"].forEach(id => {
+      const el = document.getElementById(id);
+      el.classList.remove("on","done");
+    });
+    document.getElementById("ps1").classList.add("on");
+  }
 
   // FEEDBACK
   function openFeedback() {
@@ -632,28 +904,18 @@ RTN 4 weeks or sooner if sx worsen.
     document.getElementById("fbThanks").style.display = "none";
     document.getElementById("fbText").value = "";
   }
-
-  function closeFeedback() {
-    document.getElementById("fbOverlay").classList.remove("show");
-  }
-
-  function closeFeedbackOutside(e) {
-    if (e.target === document.getElementById("fbOverlay")) closeFeedback();
-  }
-
+  function closeFeedback() { document.getElementById("fbOverlay").classList.remove("show"); }
+  function closeFeedbackOutside(e) { if (e.target === document.getElementById("fbOverlay")) closeFeedback(); }
   function selectType(el, type) {
     fbType = type;
     document.querySelectorAll(".fb-type").forEach(t => t.classList.remove("active"));
     el.classList.add("active");
   }
-
   function sendFeedback() {
     const msg = document.getElementById("fbText").value.trim();
     if (!msg) { document.getElementById("fbText").focus(); return; }
-    const userName = user.name || "Anonymous";
-    const userEmail = user.email || "unknown";
     const subject = encodeURIComponent(`MedCodeSnap Feedback: ${fbType}`);
-    const body = encodeURIComponent(`Type: ${fbType}\nFrom: ${userName} (${userEmail})\n\n${msg}`);
+    const body = encodeURIComponent(`Type: ${fbType}\n\n${msg}`);
     window.open(`mailto:patty@medcodesnap.com?subject=${subject}&body=${body}`);
     document.getElementById("fbForm").style.display = "none";
     document.getElementById("fbThanks").style.display = "block";
@@ -665,15 +927,8 @@ RTN 4 weeks or sooner if sx worsen.
     document.getElementById("snNoteText").textContent = SAMPLE_NOTE_TEXT;
     document.getElementById("snOverlay").classList.add("show");
   }
-
-  function closeSampleModal() {
-    document.getElementById("snOverlay").classList.remove("show");
-  }
-
-  function closeSampleModalOutside(e) {
-    if (e.target === document.getElementById("snOverlay")) closeSampleModal();
-  }
-
+  function closeSampleModal() { document.getElementById("snOverlay").classList.remove("show"); }
+  function closeSampleModalOutside(e) { if (e.target === document.getElementById("snOverlay")) closeSampleModal(); }
   function useSampleNote() {
     closeSampleModal();
     const blob = new Blob([SAMPLE_NOTE_TEXT], { type: "text/plain" });
