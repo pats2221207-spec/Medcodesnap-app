@@ -89,6 +89,30 @@
     .tab-select option { background: #1e3d50; color: #fff; }
     .tab-loading { font-size: 11px; color: rgba(255,255,255,0.35); font-style: italic; }
 
+    /* Google Sheets connection (3.3 / wizard) */
+    .sheets-connect-wrap { display: flex; flex-direction: column; gap: 6px; }
+    .sheets-connect-wrap label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: rgba(255,255,255,0.5); }
+    .sheets-connect-btn {
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+      color: #fff; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      padding: 9px 12px; cursor: pointer; width: 100%; transition: all 0.18s; text-align: left;
+    }
+    .sheets-connect-btn:hover { border-color: var(--teal); background: rgba(0,200,150,0.08); }
+    .sheets-connected-pill { background: rgba(0,200,150,0.1); border: 1px solid var(--teal-border); border-radius: 8px; padding: 9px 12px; font-size: 12px; color: var(--teal); font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sheets-connected-pill a { color: rgba(255,255,255,0.5); font-weight: 600; text-decoration: none; font-size: 11px; }
+    .sheets-connected-pill a:hover { color: #fff; text-decoration: underline; }
+    .sheets-connect-sub { font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.5; }
+
+    /* Sheets wizard modal */
+    .sw-step { display: none; }
+    .sw-step.active { display: block; }
+    .sw-step p { font-size: 13px; color: var(--muted); line-height: 1.55; margin-bottom: 14px; }
+    .sw-step-label { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal-dark); margin-bottom: 8px; }
+    .sw-mono-pill { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-family: 'Courier New', monospace; font-size: 12.5px; color: var(--text); display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; word-break: break-all; }
+    .sw-mono-pill button { flex-shrink: 0; background: var(--teal); color: var(--slate); border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
+    .sw-actions { display: flex; gap: 10px; margin-top: 4px; }
+    .sw-link-btn { display: block; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; }
+
     .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
     .btn-teal:hover { background: var(--teal-dark); }
     .btn-teal:active { transform: scale(0.985); }
@@ -332,6 +356,17 @@
         <button class="fp-rm" onclick="clearFile()">✕</button>
       </div>
 
+      <!-- Google Sheets connection (3.3) -->
+      <div class="sheets-connect-wrap" id="sheetsConnectWrap">
+        <label>Google Sheets</label>
+        <button class="sheets-connect-btn" id="sheetsConnectBtn" onclick="openSheetsWizard()" style="display:none;">📊 Connect Google Sheets</button>
+        <div class="sheets-connected-pill" id="sheetsConnectedPill" style="display:none;">
+          <span>✅ Connected to Google Sheets</span>
+          <a href="#" onclick="openSheetsWizard(); return false;">Change</a>
+        </div>
+        <div class="sheets-connect-sub">Requires a HIPAA-compliant Workspace plan.</div>
+      </div>
+
       <!-- Tab selector (Change 4) -->
       <div class="tab-selector-wrap">
         <label>Select Provider Sheet</label>
@@ -467,6 +502,48 @@
   </div>
 </div>
 
+<!-- Google Sheets Connection Wizard (3.3) -->
+<div class="modal-overlay" id="sheetsWizardOverlay" onclick="closeSheetsWizardOutside(event)">
+  <div class="modal-box" style="max-width:460px;">
+    <h3>Connect Google Sheets</h3>
+
+    <div class="sw-step active" id="swStep1">
+      <div class="sw-step-label">Step 1 of 3 — Copy the template</div>
+      <p>Make your own copy of the MedCodeSnap Sheets template. This is where your coded results will be saved.</p>
+      <a class="btn-teal sw-link-btn" id="swTemplateLink" href="#" target="_blank" rel="noopener">Copy the Template →</a>
+      <div class="sw-actions">
+        <button class="modal-cancel" onclick="closeSheetsWizard()">Cancel</button>
+        <button class="modal-search-btn" style="flex:2;" onclick="swGoToStep(2)">I've copied it →</button>
+      </div>
+    </div>
+
+    <div class="sw-step" id="swStep2">
+      <div class="sw-step-label">Step 2 of 3 — Share it with us</div>
+      <p>In your copied Sheet, click <strong>Share</strong> and add the email below as an <strong>Editor</strong>:</p>
+      <div class="sw-mono-pill">
+        <span id="swServiceAccountEmail"></span>
+        <button onclick="copyServiceAccountEmail()">Copy</button>
+      </div>
+      <p style="margin-top:-6px;">Before you continue: make sure this Sheet lives in a Google Workspace account with an active HIPAA Business Associate Agreement (BAA) — free or personal Gmail accounts are never BAA-eligible.</p>
+      <div class="sw-actions">
+        <button class="modal-cancel" onclick="swGoToStep(1)">← Back</button>
+        <button class="modal-search-btn" style="flex:2;" onclick="swGoToStep(3)">I've shared it →</button>
+      </div>
+    </div>
+
+    <div class="sw-step" id="swStep3">
+      <div class="sw-step-label">Step 3 of 3 — Paste your Sheet URL</div>
+      <p>Paste the link to the Sheet you just copied and shared.</p>
+      <input class="modal-search-input" id="swSheetUrl" type="text" placeholder="https://docs.google.com/spreadsheets/d/…" style="margin-bottom:14px;width:100%;"/>
+      <div class="inline-err" id="swErr"></div>
+      <div class="sw-actions">
+        <button class="modal-cancel" onclick="swGoToStep(2)">← Back</button>
+        <button class="modal-search-btn" id="swConnectBtn" style="flex:2;" onclick="connectSheet()">Connect →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Feedback FAB -->
 <button class="feedback-fab" onclick="openFeedback()">
   <span class="fab-dot"></span> Share Feedback
@@ -501,7 +578,13 @@
 <script>
 // ── Config ────────────────────────────────────────────────────────────────────
 const API_URL     = "https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze";
-const SHEET_ID    = "1FPxZOjNuL5EkEg7lfJX8HPBhdiTHUg7NafUogH33pfU";
+let   SHEET_ID    = localStorage.getItem("mcs_sheet_id") || null; // per-user, set by the Sheets wizard (3.3)
+
+const SHEETS_TEMPLATE_URL    = "https://docs.google.com/spreadsheets/d/18VO6Ehul8pQAc-4iZCXP69VbQrG6sYMYY-tZTy5kI2M/copy";
+const SHEETS_SERVICE_ACCOUNT = "medcodesnap-sheets-writer@medcodesnap.iam.gserviceaccount.com";
+
+const COGNITO_REGION    = "us-west-1";
+const COGNITO_ENDPOINT  = `https://cognito-idp.${COGNITO_REGION}.amazonaws.com/`;
 
 // ── Auth guard ────────────────────────────────────────────────────────────────
 const idToken   = localStorage.getItem("mcs_id_token");
@@ -510,8 +593,40 @@ if (!idToken) { window.location.href = "/login"; }
 document.getElementById("navEmail").textContent = userEmail || "";
 
 function signOut() {
-  ["mcs_id_token","mcs_access_token","mcs_refresh_token","mcs_email"].forEach(k => localStorage.removeItem(k));
+  ["mcs_id_token","mcs_access_token","mcs_refresh_token","mcs_email","mcs_sheet_id"].forEach(k => localStorage.removeItem(k));
   window.location.href = "/login";
+}
+
+// ── Cognito helper (direct API, same pattern as /login and the public page) ──
+async function cognitoRequest(target, body) {
+  const resp = await fetch(COGNITO_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-amz-json-1.1",
+      "X-Amz-Target": `AWSCognitoIdentityProviderService.${target}`
+    },
+    body: JSON.stringify(body)
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const err = new Error(data.message || data.__type || "Request failed");
+    err.type = data.__type;
+    throw err;
+  }
+  return data;
+}
+
+function decodeJwtPayload(token) {
+  try {
+    const part = token.split(".")[1];
+    const b64  = part.replace(/-/g,"+").replace(/_/g,"/");
+    const json = decodeURIComponent(atob(b64).split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+    return JSON.parse(json);
+  } catch(e) { return null; }
+}
+function getSub() {
+  const payload = idToken ? decodeJwtPayload(idToken) : null;
+  return payload ? payload.sub : null;
 }
 
 // ── File handling ─────────────────────────────────────────────────────────────
@@ -539,6 +654,10 @@ dz.addEventListener("drop",      e => { e.preventDefault(); dz.classList.remove(
 async function loadTabs() {
   const sel = document.getElementById("tabSelect");
   const lbl = document.getElementById("tabLoading");
+  if (!SHEET_ID) {
+    sel.innerHTML = `<option value="">Connect Google Sheets first</option>`;
+    return;
+  }
   try {
     lbl.style.display = "block";
     const resp = await fetch(API_URL, {
@@ -557,7 +676,165 @@ async function loadTabs() {
     lbl.style.display = "none";
   }
 }
-loadTabs();
+
+// ── Google Sheets connection wizard (3.3) ─────────────────────────────────────
+function updateSheetsConnectUI() {
+  const btn  = document.getElementById("sheetsConnectBtn");
+  const pill = document.getElementById("sheetsConnectedPill");
+  if (SHEET_ID) { btn.style.display = "none"; pill.style.display = "flex"; }
+  else          { btn.style.display = "block"; pill.style.display = "none"; }
+}
+
+function openSheetsWizard() {
+  document.getElementById("swTemplateLink").href = SHEETS_TEMPLATE_URL;
+  document.getElementById("swServiceAccountEmail").textContent = SHEETS_SERVICE_ACCOUNT;
+  document.getElementById("swSheetUrl").value = "";
+  document.getElementById("swErr").classList.remove("show");
+  swGoToStep(1);
+  document.getElementById("sheetsWizardOverlay").classList.add("show");
+}
+function closeSheetsWizard() { document.getElementById("sheetsWizardOverlay").classList.remove("show"); }
+function closeSheetsWizardOutside(e) { if (e.target === document.getElementById("sheetsWizardOverlay")) closeSheetsWizard(); }
+function swGoToStep(n) {
+  [1,2,3].forEach(i => document.getElementById("swStep"+i).classList.toggle("active", i === n));
+}
+function copyServiceAccountEmail() {
+  navigator.clipboard?.writeText(SHEETS_SERVICE_ACCOUNT).catch(() => {});
+}
+
+function extractSheetId(input) {
+  const s = input.trim();
+  const m = s.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) return m[1];
+  if (/^[a-zA-Z0-9-_]{20,}$/.test(s)) return s; // user pasted the bare ID
+  return null;
+}
+
+async function fetchSheetIdFromCognito() {
+  const accessToken = localStorage.getItem("mcs_access_token");
+  if (!accessToken) return null;
+  try {
+    const data = await cognitoRequest("GetUser", { AccessToken: accessToken });
+    const attr = (data.UserAttributes || []).find(a => a.Name === "custom:sheet_id");
+    return (attr && attr.Value) ? attr.Value : null;
+  } catch(e) { return null; }
+}
+async function saveSheetIdToCognito(sheetId) {
+  const accessToken = localStorage.getItem("mcs_access_token");
+  if (!accessToken) return;
+  try {
+    await cognitoRequest("UpdateUserAttributes", {
+      AccessToken: accessToken,
+      UserAttributes: [{ Name: "custom:sheet_id", Value: sheetId }]
+    });
+  } catch(e) { /* non-fatal — localStorage still has it for this session */ }
+}
+
+let _pendingCarryOverData = null;
+
+async function connectSheet() {
+  const errEl = document.getElementById("swErr");
+  errEl.classList.remove("show");
+  const sheetId = extractSheetId(document.getElementById("swSheetUrl").value);
+  if (!sheetId) { errEl.textContent = "Please paste a valid Google Sheets URL."; errEl.classList.add("show"); return; }
+
+  const btn = document.getElementById("swConnectBtn");
+  btn.disabled = true; btn.textContent = "Connecting…";
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getTabs", sheetId })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.tabs) {
+      throw new Error(`Couldn't read that sheet — make sure you shared it with ${SHEETS_SERVICE_ACCOUNT} as an Editor.`);
+    }
+
+    SHEET_ID = sheetId;
+    localStorage.setItem("mcs_sheet_id", sheetId);
+    saveSheetIdToCognito(sheetId); // fire and forget — localStorage already has it
+
+    updateSheetsConnectUI();
+    closeSheetsWizard();
+    await loadTabs();
+
+    if (_pendingCarryOverData) {
+      populateFromCarryOver(_pendingCarryOverData);
+      _pendingCarryOverData = null;
+      await doExport("sheets");
+    }
+  } catch(err) {
+    errEl.textContent = err.message || "Could not connect to that sheet. Please check sharing permissions and try again.";
+    errEl.classList.add("show");
+  } finally {
+    btn.disabled = false; btn.textContent = "Connect →";
+  }
+}
+
+// Populate the results panel from a carried-over public-page note (3.3),
+// using the same shape collectData() produces (patientName, dob, dos, diagnoses[], icd10Codes[{code,description}]).
+function populateFromCarryOver(d) {
+  document.getElementById("fPatientName").value = d.patientName || "";
+  document.getElementById("fDOB").value          = d.dob          || "";
+  document.getElementById("fDOS").value          = d.dos          || "";
+  updateRecordKey();
+
+  const dxList = document.getElementById("dxList");
+  dxList.innerHTML = "";
+  const dxs = Array.isArray(d.diagnoses) ? d.diagnoses : [];
+  if (dxs.length === 0) addDx(""); else dxs.forEach(dx => addDx(dx));
+
+  const icdList = document.getElementById("icdList");
+  icdList.innerHTML = "";
+  const codes = Array.isArray(d.icd10Codes) ? d.icd10Codes : [];
+  if (codes.length === 0) addICD("",""); else codes.forEach(c => addICD(c.code || "", c.description || ""));
+
+  document.getElementById("idleState").style.display = "none";
+  document.getElementById("resErr").classList.remove("show");
+  document.getElementById("resState").classList.add("show");
+}
+
+// Check for a carry-over record from the public page's Sheets export fork (3.3).
+async function checkPendingSheetCarryOver() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("pending") !== "sheets") return;
+
+  // Strip the flag immediately so a page refresh doesn't re-trigger this.
+  window.history.replaceState({}, "", "/dashboard");
+
+  const sub = getSub();
+  if (!sub) return;
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "getPendingSheet", sub })
+    });
+    const data = await resp.json();
+    if (data.found && data.data) {
+      _pendingCarryOverData = data.data;
+      // Delete immediately after reading — don't leave PHI sitting in temp storage.
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "deletePendingSheet", sub })
+      }).catch(() => {});
+      openSheetsWizard();
+    }
+  } catch(e) { /* no pending record — normal empty flow */ }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+(async function init() {
+  if (!SHEET_ID) {
+    const fetched = await fetchSheetIdFromCognito();
+    if (fetched) { SHEET_ID = fetched; localStorage.setItem("mcs_sheet_id", fetched); }
+  }
+  updateSheetsConnectUI();
+  await checkPendingSheetCarryOver();
+  loadTabs();
+})();
 
 // ── Analyze ───────────────────────────────────────────────────────────────────
 async function analyze() {
@@ -870,6 +1147,7 @@ async function doExport(type) {
   if (verr) { errEl.textContent = verr; errEl.classList.add("show"); return; }
 
   if (type === "sheets") {
+    if (!SHEET_ID) { openSheetsWizard(); return; }
     const tabName = document.getElementById("tabSelect").value || "Sheet1";
     // Check for duplicates by reading all rows
     let operation = "add";
