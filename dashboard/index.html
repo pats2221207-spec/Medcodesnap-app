@@ -240,6 +240,17 @@
     .modal-cancel { background: transparent; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 13px; font-weight: 600; color: var(--muted); font-family: 'Inter', sans-serif; cursor: pointer; transition: all 0.18s; }
     .modal-cancel:hover { border-color: var(--muted); color: var(--text); }
 
+    /* Paywall (3.4) — fully opaque, no click-outside dismiss. Trial ended,
+       or confirming a just-completed Stripe payment. */
+    .paywall-overlay { position: fixed; inset: 0; background: var(--slate); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .paywall-overlay.show { display: flex; }
+    .paywall-box { background: var(--card); border-radius: 16px; padding: 34px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.35); text-align: center; }
+    .paywall-box h2 { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+    .paywall-box p { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .paywall-spinner { width: 40px; height: 40px; border-radius: 50%; border: 3px solid var(--teal); border-top-color: transparent; animation: pwrot 0.85s linear infinite; margin: 0 auto 18px; }
+    @keyframes pwrot { to { transform: rotate(360deg); } }
+    .paywall-icon { font-size: 30px; margin-bottom: 12px; }
+
     /* Duplicate dialog */
     .dup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1001; display: none; align-items: center; justify-content: center; padding: 20px; }
     .dup-overlay.show { display: flex; }
@@ -477,6 +488,18 @@
   </div>
 </div>
 
+<!-- Paywall (3.4) — blocking, not silent; never auto-charges. -->
+<div class="paywall-overlay" id="paywallOverlay">
+  <div class="paywall-box">
+    <div id="paywallBlocked" style="display:none;">
+      <div class="paywall-icon">🔒</div>
+      <h2>Your free trial has ended</h2>
+      <p>Your 14-day trial is over. Add billing info to keep using MedCodeSnap — you won't be charged automatically; you'll complete payment on Stripe's secure checkout page.</p>
+      <button class="btn-teal" onclick="goToStripe()">Subscribe Now →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ICD-10 Search Modal -->
 <div class="modal-overlay" id="icdModal" onclick="closeIcdModalOutside(event)">
   <div class="modal-box">
@@ -627,6 +650,56 @@ function decodeJwtPayload(token) {
 function getSub() {
   const payload = idToken ? decodeJwtPayload(idToken) : null;
   return payload ? payload.sub : null;
+}
+
+// ── Paywall (3.4) ────────────────────────────────────────────────────────────
+// Source of truth for custom:billing_status is the Stripe webhook (Lambda) —
+// this code only ever reads that attribute, never writes "active" itself.
+// The redirect-back path below is a fast-path UI that polls for the webhook's
+// write rather than trusting the URL, so there's no spoofable shortcut to
+// unlock billing by just hitting /dashboard?billing=pending.
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY8wOgrHgWB2Uh822aAw01";
+const TRIAL_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+
+function showPaywall(view) {
+  document.getElementById("paywallBlocked").style.display = view === "blocked" ? "block" : "none";
+  document.getElementById("paywallOverlay").classList.add("show");
+}
+
+function goToStripe() {
+  const params = new URLSearchParams();
+  const sub = getSub();
+  if (sub) params.set("client_reference_id", sub);
+  if (userEmail) params.set("prefilled_email", userEmail);
+  window.location.href = `${STRIPE_PAYMENT_LINK}?${params.toString()}`;
+}
+
+async function fetchBillingState() {
+  const accessToken = localStorage.getItem("mcs_access_token");
+  if (!accessToken) return { billingStatus: null, trialStart: null };
+  try {
+    const data = await cognitoRequest("GetUser", { AccessToken: accessToken });
+    const attrs = data.UserAttributes || [];
+    const billingStatus = (attrs.find(a => a.Name === "custom:billing_status") || {}).Value || null;
+    const trialStart    = (attrs.find(a => a.Name === "custom:trial_start") || {}).Value || null;
+    return { billingStatus, trialStart };
+  } catch (e) {
+    return { billingStatus: null, trialStart: null };
+  }
+}
+
+// Gate the dashboard. Missing trial_start (e.g. an account created before
+// this feature shipped) is treated as "not yet expired" — fail open rather
+// than lock out existing users on a backfill gap. Returns true if the
+// dashboard should proceed loading, false if the paywall was shown instead.
+async function checkPaywall() {
+  const { billingStatus, trialStart } = await fetchBillingState();
+  if (billingStatus === "active") return true;
+  if (!trialStart) return true;
+  const elapsedMs = Date.now() - parseInt(trialStart, 10);
+  if (!Number.isFinite(elapsedMs) || elapsedMs < TRIAL_DAYS_MS) return true;
+  showPaywall("blocked");
+  return false;
 }
 
 // ── File handling ─────────────────────────────────────────────────────────────
@@ -827,6 +900,10 @@ async function checkPendingSheetCarryOver() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async function init() {
+  // Paywall gate (3.4) runs before anything else loads.
+  const ok = await checkPaywall();
+  if (!ok) return; // paywall shown — don't load the rest of the dashboard
+
   if (!SHEET_ID) {
     const fetched = await fetchSheetIdFromCognito();
     if (fetched) { SHEET_ID = fetched; localStorage.setItem("mcs_sheet_id", fetched); }
