@@ -2,16 +2,19 @@
 // Deploy behind API Gateway (REST API, Lambda Proxy integration) on:
 // POST /api/analyze → action:"analyze"
 // POST /api/analyze → action:"syncSheet"
+// POST /api/analyze → Stripe webhook (detected via Stripe-Signature header, see 3.4)
 //
 // Required environment variables:
 // AZURE_OPENAI_KEY - Azure OpenAI API key
 // AZURE_OPENAI_ENDPOINT - Azure OpenAI resource endpoint (e.g. https://<resource>.cognitiveservices.azure.com)
 // AZURE_OPENAI_DEPLOYMENT_NAME - Azure OpenAI deployment name (e.g. gpt-4o)
 // GOOGLE_SERVICE_ACCOUNT_JSON - Full JSON key for the Google service account
+// STRIPE_WEBHOOK_SECRET - Signing secret (whsec_...) from the Stripe webhook endpoint config
 
 const crypto = require("crypto");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } = require("@aws-sdk/lib-dynamodb");
+const { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand, ListUsersCommand } = require("@aws-sdk/client-cognito-identity-provider");
 
 const CORS_HEADERS = {
 "Access-Control-Allow-Origin": "*",
@@ -27,6 +30,79 @@ const ddbClient = new DynamoDBClient({ region: process.env.AWS_REGION || "us-wes
 const ddb = DynamoDBDocumentClient.from(ddbClient);
 const PENDING_SHEETS_TABLE = process.env.PENDING_SHEETS_TABLE || "medcodesnap-pending-sheets";
 const PENDING_SHEETS_TTL_SECONDS = 3600; // 1 hour
+
+// ── Stripe webhook → trial/billing status (3.4) ──────────────────────────────
+// Source of truth for "did this person actually pay." The redirect-back path
+// (frontend) is just an instant-unlock UI nicety that polls for the same
+// custom:billing_status attribute this webhook sets — it never writes the
+// attribute itself, so there's no spoofable "trust the URL" shortcut.
+const cognitoClient = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION || "us-west-1" });
+const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || "us-west-1_vhYzjYK3K";
+const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300; // 5 minutes — matches Stripe's own default, guards against replay
+
+function getHeader(event, name) {
+const headers = event.headers || {};
+const key = Object.keys(headers).find(k => k.toLowerCase() === name.toLowerCase());
+return key ? headers[key] : null;
+}
+
+// Hand-rolled Stripe webhook signature verification (no `stripe` npm package,
+// matching how this Lambda already hand-rolls the Google OAuth JWT above).
+// Stripe-Signature header format: "t=<timestamp>,v1=<sig>[,v1=<sig2>...]"
+// Signed payload: "<timestamp>.<rawBody>", HMAC-SHA256 with the webhook
+// secret, hex digest, compared with a constant-time check.
+function verifyStripeSignature(rawBody, sigHeader, secret) {
+if (!sigHeader || !secret) return false;
+
+const timestampPart = sigHeader.split(",").find(p => p.startsWith("t="));
+const timestamp = timestampPart ? timestampPart.slice(2) : null;
+const signatures = sigHeader.split(",").filter(p => p.startsWith("v1=")).map(p => p.slice(3));
+if (!timestamp || !signatures.length) return false;
+
+const age = Math.abs(Math.floor(Date.now() / 1000) - parseInt(timestamp, 10));
+if (!Number.isFinite(age) || age > STRIPE_WEBHOOK_TOLERANCE_SECONDS) return false;
+
+const signedPayload = `${timestamp}.${rawBody}`;
+const expected = crypto.createHmac("sha256", secret).update(signedPayload, "utf8").digest("hex");
+
+return signatures.some(sig => {
+if (sig.length !== expected.length) return false;
+try { return crypto.timingSafeEqual(Buffer.from(sig, "hex"), Buffer.from(expected, "hex")); }
+catch (e) { return false; }
+});
+}
+
+// Resolve the Cognito user for a given sub and set custom:billing_status=active.
+// For this pool, Username is an auto-generated UUID equal to sub (not email),
+// so the direct path works in the common case; ListUsers-by-sub is a defensive
+// fallback in case that assumption ever changes.
+async function activateBillingForSub(sub) {
+try {
+await cognitoClient.send(new AdminUpdateUserAttributesCommand({
+UserPoolId: USER_POOL_ID,
+Username: sub,
+UserAttributes: [{ Name: "custom:billing_status", Value: "active" }]
+}));
+return true;
+} catch (err) {
+if (err.name !== "UserNotFoundException") throw err;
+}
+
+const found = await cognitoClient.send(new ListUsersCommand({
+UserPoolId: USER_POOL_ID,
+Filter: `sub = "${sub}"`,
+Limit: 1
+}));
+const user = (found.Users || [])[0];
+if (!user) return false;
+
+await cognitoClient.send(new AdminUpdateUserAttributesCommand({
+UserPoolId: USER_POOL_ID,
+Username: user.Username,
+UserAttributes: [{ Name: "custom:billing_status", Value: "active" }]
+}));
+return true;
+}
 
 // ── Google OAuth helper ──────────────────────────────────────────────────────
 
@@ -154,6 +230,39 @@ const method = event.httpMethod || (event.requestContext && event.requestContext
 
 if (method === "OPTIONS") return { statusCode: 200, headers: CORS_HEADERS, body: "" };
 if (method !== "POST") return { statusCode: 405, headers: CORS_HEADERS, body: "Method Not Allowed" };
+
+// ── Stripe webhook (3.4) ── detected by Stripe-Signature header, handled
+// before the action-based routing below (which expects our own JSON shape).
+// Must use the RAW body string for signature verification — JSON.parse
+// happens only after the signature checks out.
+const stripeSig = getHeader(event, "Stripe-Signature");
+if (stripeSig) {
+const rawBody = event.body || "";
+const secret = process.env.STRIPE_WEBHOOK_SECRET;
+if (!verifyStripeSignature(rawBody, stripeSig, secret)) {
+console.error("Stripe webhook signature verification failed");
+return { statusCode: 400, headers: CORS_HEADERS, body: "Invalid signature" };
+}
+try {
+const stripeEvent = JSON.parse(rawBody);
+if (stripeEvent.type === "checkout.session.completed") {
+const session = stripeEvent.data.object;
+const sub = session.client_reference_id;
+if (sub && session.payment_status === "paid") {
+await activateBillingForSub(sub);
+} else {
+console.error("checkout.session.completed missing client_reference_id or not paid", { hasSub: !!sub, payment_status: session.payment_status });
+}
+}
+// Other event types Stripe might send to this same endpoint are
+// acknowledged but otherwise ignored — checkout.session.completed
+// (filtered to payment_status:"paid") is the source of truth here.
+return { statusCode: 200, headers: CORS_HEADERS, body: JSON.stringify({ received: true }) };
+} catch (err) {
+console.error("Stripe webhook handling error:", err.name || "Error", "-", err.message);
+return { statusCode: 500, headers: CORS_HEADERS, body: "Webhook handler error" };
+}
+}
 
 try {
 const body = JSON.parse(event.body || "{}");
