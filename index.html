@@ -953,14 +953,36 @@ RTN 4 weeks or sooner if sx worsen.
     openSuModal(type);
   }
 
-  function runExport(type, d) {
+  async function runExport(type, d) {
     if (type === "xlsx") { downloadXLSX(d); showGoToDashboard(); }
     else if (type === "docx") { downloadDOCX(d); showGoToDashboard(); }
     else if (type === "sheets") {
-      // Carry-over persistence (3.3) ships in Phase 4 — for now this lands in
-      // whatever the normal /dashboard Sheets wizard shows today.
+      const sub = getSub();
+      if (sub) {
+        try {
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "savePendingSheet", sub, data: d })
+          });
+        } catch(e) { /* proceed anyway — dashboard just shows its normal empty wizard */ }
+      }
       window.location.href = "/dashboard?pending=sheets";
     }
+  }
+
+  function decodeJwtPayload(token) {
+    try {
+      const part = token.split(".")[1];
+      const b64  = part.replace(/-/g,"+").replace(/_/g,"/");
+      const json = decodeURIComponent(atob(b64).split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join(""));
+      return JSON.parse(json);
+    } catch(e) { return null; }
+  }
+  function getSub() {
+    const token = localStorage.getItem("mcs_id_token");
+    const payload = token ? decodeJwtPayload(token) : null;
+    return payload ? payload.sub : null;
   }
 
   function showGoToDashboard() {
