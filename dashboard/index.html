@@ -497,6 +497,17 @@
       <p>Your 14-day trial is over. Add billing info to keep using MedCodeSnap — you won't be charged automatically; you'll complete payment on Stripe's secure checkout page.</p>
       <button class="btn-teal" onclick="goToStripe()">Subscribe Now →</button>
     </div>
+    <div id="paywallConfirming" style="display:none;">
+      <div class="paywall-spinner"></div>
+      <h2>Confirming your payment…</h2>
+      <p>This usually takes just a few seconds. Please don't close this tab.</p>
+    </div>
+    <div id="paywallTimeout" style="display:none;">
+      <div class="paywall-icon">⏳</div>
+      <h2>Still confirming…</h2>
+      <p>Your payment may still be processing on Stripe's side. This page will unlock automatically once it's confirmed — refresh in a moment to check again.</p>
+      <button class="btn-teal" onclick="window.location.reload()">Refresh →</button>
+    </div>
   </div>
 </div>
 
@@ -662,8 +673,13 @@ const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/7sY8wOgrHgWB2Uh822aAw01";
 const TRIAL_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
 function showPaywall(view) {
-  document.getElementById("paywallBlocked").style.display = view === "blocked" ? "block" : "none";
+  document.getElementById("paywallBlocked").style.display    = view === "blocked"    ? "block" : "none";
+  document.getElementById("paywallConfirming").style.display = view === "confirming" ? "block" : "none";
+  document.getElementById("paywallTimeout").style.display    = view === "timeout"    ? "block" : "none";
   document.getElementById("paywallOverlay").classList.add("show");
+}
+function hidePaywall() {
+  document.getElementById("paywallOverlay").classList.remove("show");
 }
 
 function goToStripe() {
@@ -699,6 +715,22 @@ async function checkPaywall() {
   const elapsedMs = Date.now() - parseInt(trialStart, 10);
   if (!Number.isFinite(elapsedMs) || elapsedMs < TRIAL_DAYS_MS) return true;
   showPaywall("blocked");
+  return false;
+}
+
+// Redirect-back fast path (3.4) — polls for the webhook's write rather than
+// trusting the redirect itself. ~15s covers the overwhelming majority of
+// real webhook latency; falls back to a manual-refresh message on timeout
+// rather than spinning forever or silently letting someone in unconfirmed.
+async function pollForBillingActive() {
+  showPaywall("confirming");
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline) {
+    const { billingStatus } = await fetchBillingState();
+    if (billingStatus === "active") { hidePaywall(); return true; }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  showPaywall("timeout");
   return false;
 }
 
@@ -900,9 +932,19 @@ async function checkPendingSheetCarryOver() {
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 (async function init() {
-  // Paywall gate (3.4) runs before anything else loads.
-  const ok = await checkPaywall();
-  if (!ok) return; // paywall shown — don't load the rest of the dashboard
+  // Paywall gate (3.4) runs before anything else loads. Two entry shapes:
+  //  - ?billing=pending: just came back from Stripe — poll for the webhook's
+  //    write instead of trusting the redirect itself.
+  //  - normal load: check trial/billing status directly.
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("billing") === "pending") {
+    window.history.replaceState({}, "", "/dashboard");
+    const unlocked = await pollForBillingActive();
+    if (!unlocked) return; // stuck on the "still confirming" view — don't load the rest of the dashboard
+  } else {
+    const ok = await checkPaywall();
+    if (!ok) return; // paywall shown — don't load the rest of the dashboard
+  }
 
   if (!SHEET_ID) {
     const fetched = await fetchSheetIdFromCognito();
