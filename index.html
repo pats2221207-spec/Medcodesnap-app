@@ -215,8 +215,10 @@
     #resErr { background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 9px; padding: 11px 14px; font-size: 13px; color: var(--error-text); display: none; line-height: 1.5; }
     #resErr.show { display: block; }
 
-    .foot { padding: 12px 30px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
-    .foot p { font-size: 11px; color: var(--muted); line-height: 1.5; text-align: center; }
+    /* Right padding reserves space for the fixed Share Feedback button (bottom-right)
+       so the disclaimer text is never clipped/obscured by it on desktop widths. */
+    .foot { padding: 14px 190px 26px 30px; border-top: 1px solid var(--border); background: var(--card); flex-shrink: 0; }
+    .foot p { font-size: 11px; color: var(--muted); line-height: 1.5; text-align: left; }
 
     /* ICD-10 Search Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -338,6 +340,7 @@
       .right-head { padding: 18px 20px 14px; }
       .right-body { padding: 18px 20px; }
       .feedback-fab { bottom: 16px; right: 16px; padding: 7px 13px; font-size: 11px; }
+      .foot { padding: 12px 120px 20px 20px; }
       .fp-name { max-width: 150px; }
     }
 
