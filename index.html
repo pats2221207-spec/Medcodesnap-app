@@ -51,6 +51,13 @@
       text-decoration: none;
     }
     .login-link:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.3); }
+    .trial-cta-btn {
+      background: var(--teal); color: var(--slate);
+      border: none; border-radius: 7px;
+      padding: 7px 14px; font-size: 12px; font-weight: 700;
+      font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s;
+    }
+    .trial-cta-btn:hover { background: var(--teal-dark); }
 
     .shell { display: flex; height: 100vh; padding-top: 52px; }
 
@@ -105,6 +112,8 @@
     .upload-fine { font-size: 11px; color: rgba(255,255,255,0.22); text-align: center; line-height: 1.6; padding: 0 4px; }
 
     .free-pill { background: var(--teal-dim); border: 1px solid var(--teal-border); border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--teal); font-weight: 500; line-height: 1.5; }
+    .trial-pill-link { color: var(--teal); font-weight: 700; text-decoration: underline; cursor: pointer; }
+    .trial-pill-link:hover { color: var(--teal-dark); }
 
     /* RIGHT */
     .right { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow-y: auto; border-left: 1px solid var(--border); }
@@ -354,6 +363,7 @@
   <div class="logo">MEDCODESNAP</div>
   <div class="nav-right">
     <div class="badge">Now Live</div>
+    <button type="button" class="trial-cta-btn" id="navTrialBtn" onclick="openSuModal()">Start Your Free Trial</button>
     <a href="/login" class="login-link">Log In</a>
   </div>
 </nav>
@@ -363,12 +373,12 @@
   <!-- LEFT -->
   <div class="left">
     <div class="left-top">
-      <h1>Clinical notes to<br><em>ICD-10 codes.</em><br>Instantly.</h1>
+      <h1>Clinical notes to<br><em>ICD-10 codes.</em><br>In a Snap.</h1>
       <p>Upload any clinical note — photo, scan, or PDF. Results appear on the right in seconds. No sign-up required to try it.</p>
     </div>
 
     <div id="uploadWrap">
-      <div class="free-pill">✨ Free to try, no account needed. Sign up only if you want to export your results.</div>
+      <div class="free-pill">✨ Free to try, no account needed. Sign up only if you want to export your results.<br>Or skip the demo and <a href="javascript:void(0)" class="trial-pill-link" onclick="openSuModal()">start your free 14-day trial now</a>.</div>
       <div class="drop-zone" id="dropZone">
         <input type="file" id="fileIn" accept=".jpg,.jpeg,.png,.pdf" onchange="onFile(this)"/>
         <div class="drop-icon">📋</div>
@@ -490,7 +500,7 @@
 
     </div>
     <div class="foot">
-      <p>Early access demo · Use fictional or de-identified notes only · Not HIPAA-compliant until full launch</p>
+      <p>Early access demo · Use fictional or de-identified notes only. Demo mode (no sign-in) is not HIPAA-compliant — signed-in accounts, including trial accounts, meet our HIPAA compliance standards.</p>
     </div>
   </div>
 
@@ -956,6 +966,10 @@ RTN 4 weeks or sooner if sx worsen.
   async function runExport(type, d) {
     if (type === "xlsx") { downloadXLSX(d); showGoToDashboard(); }
     else if (type === "docx") { downloadDOCX(d); showGoToDashboard(); }
+    else if (!type) {
+      // Trial-only signup (header CTA / banner link) — no export queued, just go to the dashboard.
+      window.location.href = "/dashboard";
+    }
     else if (type === "sheets") {
       const sub = getSub();
       if (sub) {
