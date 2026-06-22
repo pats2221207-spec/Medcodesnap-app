@@ -112,6 +112,10 @@
     .sw-mono-pill button { flex-shrink: 0; background: var(--teal); color: var(--slate); border: none; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; }
     .sw-actions { display: flex; gap: 10px; margin-top: 4px; }
     .sw-link-btn { display: block; width: 100%; text-align: center; text-decoration: none; box-sizing: border-box; }
+    .sw-hipaa-notice { background: var(--error-bg); border: 1px solid rgba(217,48,37,0.2); border-radius: 8px; padding: 11px 13px; font-size: 12px; color: var(--text); line-height: 1.55; margin-bottom: 12px; }
+    .sw-ack-row { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; color: var(--text); line-height: 1.4; margin-bottom: 14px; cursor: pointer; }
+    .sw-ack-row input[type="checkbox"] { margin-top: 2px; flex-shrink: 0; width: 15px; height: 15px; cursor: pointer; }
+    .sw-hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: -8px 0 12px; }
 
     .btn-teal { width: 100%; background: var(--teal); color: var(--slate); border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.18s, transform 0.1s; }
     .btn-teal:hover { background: var(--teal-dark); }
@@ -558,7 +562,8 @@
         <span id="swServiceAccountEmail"></span>
         <button onclick="copyServiceAccountEmail()">Copy</button>
       </div>
-      <p style="margin-top:-6px;">Before you continue: make sure this Sheet lives in a Google Workspace account with an active HIPAA Business Associate Agreement (BAA) — free or personal Gmail accounts are never BAA-eligible.</p>
+      <p style="margin-top:-6px;">Before you continue: make sure this Sheet lives in a Google Workspace account with an active HIPAA Business Associate Agreement (BAA) — free or personal Gmail accounts are never BAA-eligible and are therefore NOT HIPAA compliant.</p>
+      <p>Please keep this Editor access in place after setup — MedCodeSnap needs to remain an Editor on your Sheet on an ongoing basis so it can keep writing your coding results into it, not just during this one-time setup.</p>
       <div class="sw-actions">
         <button class="modal-cancel" onclick="swGoToStep(1)">← Back</button>
         <button class="modal-search-btn" style="flex:2;" onclick="swGoToStep(3)">I've shared it →</button>
@@ -568,11 +573,21 @@
     <div class="sw-step" id="swStep3">
       <div class="sw-step-label">Step 3 of 3 — Paste your Sheet URL</div>
       <p>Paste the link to the Sheet you just copied and shared.</p>
-      <input class="modal-search-input" id="swSheetUrl" type="text" placeholder="https://docs.google.com/spreadsheets/d/…" style="margin-bottom:14px;width:100%;"/>
+
+      <div class="sw-hipaa-notice">
+        <strong>Before connecting your Google Sheet —</strong> Make sure it's on a Google Workspace plan with an active HIPAA Business Associate Agreement (BAA) signed, since this Sheet will store patient health information. Free or personal Gmail accounts are never BAA-eligible and are therefore not HIPAA compliant.
+      </div>
+      <label class="sw-ack-row">
+        <input type="checkbox" id="swHipaaAck" onchange="swToggleHipaaAck()"/>
+        <span>I confirm my connected Google Sheet meets this requirement.</span>
+      </label>
+
+      <input class="modal-search-input" id="swSheetUrl" type="text" placeholder="https://docs.google.com/spreadsheets/d/…" style="margin-bottom:6px;width:100%;" disabled/>
+      <div class="sw-hint">Tip: in Google Sheets, click the dropdown arrow next to the <strong>Share</strong> button and choose <strong>Copy link</strong> to grab the URL.</div>
       <div class="inline-err" id="swErr"></div>
       <div class="sw-actions">
         <button class="modal-cancel" onclick="swGoToStep(2)">← Back</button>
-        <button class="modal-search-btn" id="swConnectBtn" style="flex:2;" onclick="connectSheet()">Connect →</button>
+        <button class="modal-search-btn" id="swConnectBtn" style="flex:2;" onclick="connectSheet()" disabled>Connect →</button>
       </div>
     </div>
   </div>
@@ -795,6 +810,11 @@ function openSheetsWizard() {
   document.getElementById("swServiceAccountEmail").textContent = SHEETS_SERVICE_ACCOUNT;
   document.getElementById("swSheetUrl").value = "";
   document.getElementById("swErr").classList.remove("show");
+  // HIPAA acknowledgement must be re-confirmed each time the wizard is opened
+  // (same wizard/modal regardless of entry point — direct button, "Change" link, or carry-over redirect).
+  document.getElementById("swHipaaAck").checked = false;
+  document.getElementById("swSheetUrl").disabled = true;
+  document.getElementById("swConnectBtn").disabled = true;
   swGoToStep(1);
   document.getElementById("sheetsWizardOverlay").classList.add("show");
 }
@@ -805,6 +825,11 @@ function swGoToStep(n) {
 }
 function copyServiceAccountEmail() {
   navigator.clipboard?.writeText(SHEETS_SERVICE_ACCOUNT).catch(() => {});
+}
+function swToggleHipaaAck() {
+  const ack = document.getElementById("swHipaaAck").checked;
+  document.getElementById("swSheetUrl").disabled = !ack;
+  document.getElementById("swConnectBtn").disabled = !ack;
 }
 
 function extractSheetId(input) {
