@@ -18,7 +18,7 @@ const { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand, ListUse
 
 const CORS_HEADERS = {
 "Access-Control-Allow-Origin": "*",
-"Access-Control-Allow-Headers": "Content-Type",
+"Access-Control-Allow-Headers": "Content-Type, Stripe-Signature",
 "Access-Control-Allow-Methods": "POST,OPTIONS"
 };
 
