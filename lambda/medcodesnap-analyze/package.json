@@ -1,0 +1,11 @@
+{
+  "name": "medcodesnap-analyze",
+  "private": true,
+  "description": "Test/dev tooling for the medcodesnap-analyze Lambda. Not required at runtime — the deployed function only needs index.js plus the @aws-sdk packages already available in/bundled for the Lambda environment.",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
+}

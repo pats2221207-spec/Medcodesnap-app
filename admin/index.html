@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MedCodeSnap — Admin</title>
+<script>
+  // ── Access-gate (Phase 10) ───────────────────────────────────────────────
+  // Runs before anything else on the page renders. Identifies the logged-in
+  // user the exact same way /dashboard does (dashboard/index.html's auth
+  // guard): localStorage "mcs_id_token" must be present, and "mcs_email" is
+  // the email to check. If either is missing, or the email isn't EXACTLY
+  // patty@medcodesnap.com, redirect away immediately and stop executing —
+  // no admin markup ever gets painted for anyone else, even for a moment.
+  //
+  // This is a UX nicety only. The real enforcement is on the backend: every
+  // adminListUsers/adminUpdateUser/adminCreateUser call below sends the
+  // user's own Cognito access token, and the Lambda independently calls
+  // Cognito's GetUser with that token to confirm the caller is really
+  // patty@medcodesnap.com before doing anything — it never trusts this
+  // frontend check, or any email field the page might send.
+  (function gateAdminPage() {
+    var ADMIN_EMAIL = "patty@medcodesnap.com";
+    var idToken = localStorage.getItem("mcs_id_token");
+    var email = localStorage.getItem("mcs_email");
+    if (!idToken) {
+      window.location.replace("/login");
+      throw new Error("redirecting");
+    }
+    if (email !== ADMIN_EMAIL) {
+      window.location.replace("/dashboard");
+      throw new Error("redirecting");
+    }
+  })();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; background: #f2f6f9; color: #112233; }
+
+  nav {
+    height: 52px; background: #1e3d50; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 24px;
+  }
+  .logo { font-weight: 800; font-size: 16px; color: #00C896; letter-spacing: 0.04em; }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-email { font-size: 13px; color: rgba(255,255,255,0.7); }
+  .signout-btn {
+    background: transparent; border: 1px solid rgba(255,255,255,0.25); color: #fff;
+    border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer;
+  }
+  .signout-btn:hover { background: rgba(255,255,255,0.1); }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 24px 60px; }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { font-size: 13px; color: #607080; margin-bottom: 24px; }
+
+  .card { background: #fff; border: 1px solid #dce6ed; border-radius: 10px; padding: 20px; margin-bottom: 24px; }
+  .card h2 { font-size: 15px; margin-bottom: 14px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eef2f5; vertical-align: middle; }
+  th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: #607080; }
+  tr:last-child td { border-bottom: none; }
+
+  select, input[type="date"], input[type="text"], input[type="email"] {
+    font-family: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid #dce6ed;
+    border-radius: 6px; background: #fff; color: #112233;
+  }
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font-family: inherit; font-size: 12px; font-weight: 600; padding: 6px 12px;
+    border-radius: 6px; border: none; cursor: pointer; background: #00C896; color: #112233;
+  }
+  .btn:hover { background: #00a87e; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-secondary { background: #eef2f5; color: #112233; }
+  .btn-secondary:hover { background: #dce6ed; }
+
+  .add-client-form { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+  .fl { display: flex; flex-direction: column; gap: 4px; }
+  .fl label { font-size: 11px; font-weight: 600; color: #607080; text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .msg { font-size: 12px; padding: 8px 12px; border-radius: 6px; margin-top: 10px; display: none; }
+  .msg.show { display: block; }
+  .msg.ok { background: #edfaf5; color: #00876a; border: 1px solid rgba(0,200,150,0.28); }
+  .msg.err { background: rgba(255,100,80,0.1); color: #c8402c; border: 1px solid rgba(255,100,80,0.3); }
+
+  .loading-state, .empty-state { font-size: 13px; color: #607080; padding: 16px 0; }
+  .row-msg { font-size: 11px; margin-top: 4px; }
+  .row-msg.ok { color: #00876a; }
+  .row-msg.err { color: #c8402c; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">MEDCODESNAP — ADMIN</div>
+  <div class="nav-right">
+    <span class="nav-email" id="navEmail"></span>
+    <button class="signout-btn" onclick="signOut()">Sign out</button>
+  </div>
+</nav>
+
+<main>
+  <h1>Users</h1>
+  <div class="sub">Manage billing status, trial start, and manually add new clients — internal tool, not customer-facing.</div>
+
+  <div class="card">
+    <h2>Add a client</h2>
+    <div class="add-client-form">
+      <div class="fl">
+        <label>Email</label>
+        <input type="email" id="newEmail" placeholder="client@example.com"/>
+      </div>
+      <div class="fl">
+        <label>Billing status</label>
+        <select id="newBillingStatus"></select>
+      </div>
+      <div class="fl">
+        <label>Trial start</label>
+        <input type="date" id="newTrialStart"/>
+      </div>
+      <button class="btn" id="createBtn" onclick="createClient()">Create</button>
+    </div>
+    <div class="msg" id="createMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>All signed-up users</h2>
+    <div class="loading-state" id="loadingState">Loading users…</div>
+    <div class="empty-state" id="emptyState" style="display:none;">No users found.</div>
+    <table id="usersTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Billing status</th>
+          <th>Trial start</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="usersBody"></tbody>
+    </table>
+    <div class="msg" id="listMsg"></div>
+  </div>
+</main>
+
+<script>
+  // ── Config ────────────────────────────────────────────────────────────────
+  const API_URL = "https://cl5r7wdm9b.execute-api.us-west-1.amazonaws.com/prod/api/analyze";
+  // Mirrors ADMIN_BILLING_STATUSES in lambda/medcodesnap-analyze/index.js —
+  // keep these two lists in sync if that ever changes.
+  const BILLING_STATUSES = ["active", "trialing", "expired", "canceled"];
+
+  const idToken = localStorage.getItem("mcs_id_token");
+  const accessToken = localStorage.getItem("mcs_access_token");
+  const userEmail = localStorage.getItem("mcs_email");
+  document.getElementById("navEmail").textContent = userEmail || "";
+
+  function signOut() {
+    ["mcs_id_token","mcs_access_token","mcs_refresh_token","mcs_email","mcs_sheet_id"].forEach(k => localStorage.removeItem(k));
+    window.location.href = "/login";
+  }
+
+  function fillStatusSelect(sel, current) {
+    sel.innerHTML = "";
+    if (!current || !BILLING_STATUSES.includes(current)) {
+      const optBlank = document.createElement("option");
+      optBlank.value = "";
+      optBlank.textContent = current ? current : "— none —";
+      optBlank.disabled = !current; // allow re-selecting an unrecognized existing value as a no-op
+      sel.appendChild(optBlank);
+    }
+    BILLING_STATUSES.forEach(s => {
+      const opt = document.createElement("option");
+      opt.value = s;
+      opt.textContent = s;
+      if (s === current) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  // custom:trial_start is stored as an epoch-ms string (String(Date.now())),
+  // not an ISO date — see index.html's signup flow and dashboard's
+  // checkPaywall(). These two helpers convert between that and the
+  // yyyy-mm-dd format an <input type="date"> needs, so the underlying
+  // trial-expiry math elsewhere in the app never has to change.
+  function epochMsToDateInputValue(epochMsStr) {
+    if (!epochMsStr) return "";
+    const n = parseInt(epochMsStr, 10);
+    if (!Number.isFinite(n)) return "";
+    const d = new Date(n);
+    if (isNaN(d.getTime())) return "";
+    return d.toISOString().slice(0, 10);
+  }
+  function dateInputValueToEpochMs(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr + "T00:00:00Z");
+    if (isNaN(d.getTime())) return null;
+    return String(d.getTime());
+  }
+
+  async function callApi(action, extra) {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action, accessToken, ...extra })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      const err = new Error(data.error || `Request failed (${resp.status})`);
+      err.status = resp.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function showMsg(el, text, isError) {
+    el.textContent = text;
+    el.classList.remove("ok", "err");
+    el.classList.add(isError ? "err" : "ok", "show");
+    setTimeout(() => el.classList.remove("show"), 5000);
+  }
+
+  function formatCreated(iso) {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString(); } catch (e) { return iso; }
+  }
+
+  let users = [];
+
+  function renderUsers() {
+    const table = document.getElementById("usersTable");
+    const empty = document.getElementById("emptyState");
+    const body = document.getElementById("usersBody");
+    body.innerHTML = "";
+
+    if (!users.length) {
+      table.style.display = "none";
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+    table.style.display = "table";
+
+    users.forEach(u => {
+      const tr = document.createElement("tr");
+
+      const tdEmail = document.createElement("td");
+      tdEmail.textContent = u.email || "—";
+      tr.appendChild(tdEmail);
+
+      const tdStatus = document.createElement("td");
+      const statusSel = document.createElement("select");
+      fillStatusSelect(statusSel, u.billing_status);
+      const statusBtn = document.createElement("button");
+      statusBtn.className = "btn btn-secondary";
+      statusBtn.textContent = "Save";
+      statusBtn.style.marginLeft = "8px";
+      statusBtn.onclick = () => saveBillingStatus(u.sub, statusSel.value, statusBtn, tdStatus);
+      tdStatus.appendChild(statusSel);
+      tdStatus.appendChild(statusBtn);
+      tr.appendChild(tdStatus);
+
+      const tdTrial = document.createElement("td");
+      const trialInput = document.createElement("input");
+      trialInput.type = "date";
+      trialInput.value = epochMsToDateInputValue(u.trial_start);
+      const trialBtn = document.createElement("button");
+      trialBtn.className = "btn btn-secondary";
+      trialBtn.textContent = "Save";
+      trialBtn.style.marginLeft = "8px";
+      trialBtn.onclick = () => saveTrialStart(u.sub, trialInput.value, trialBtn, tdTrial);
+      tdTrial.appendChild(trialInput);
+      tdTrial.appendChild(trialBtn);
+      tr.appendChild(tdTrial);
+
+      const tdCreated = document.createElement("td");
+      tdCreated.textContent = formatCreated(u.created);
+      tr.appendChild(tdCreated);
+
+      const tdActions = document.createElement("td");
+      const rowMsg = document.createElement("div");
+      rowMsg.className = "row-msg";
+      tdActions.appendChild(rowMsg);
+      tr.appendChild(tdActions);
+      tr.dataset.rowMsgHolder = "1";
+      tr._rowMsg = rowMsg;
+
+      body.appendChild(tr);
+    });
+  }
+
+  function showRowMsg(rowEl, text, isError) {
+    const msg = rowEl._rowMsg || rowEl.parentElement.querySelector(".row-msg");
+    if (!msg) return;
+    msg.textContent = text;
+    msg.classList.remove("ok", "err");
+    msg.classList.add(isError ? "err" : "ok");
+    setTimeout(() => { msg.textContent = ""; }, 4000);
+  }
+
+  async function saveBillingStatus(sub, value, btnEl, cellEl) {
+    if (!value) { showRowMsg(cellEl.parentElement, "Pick a status first.", true); return; }
+    btnEl.disabled = true;
+    try {
+      await callApi("adminUpdateUser", { sub, billing_status: value });
+      showRowMsg(cellEl.parentElement, "Saved.", false);
+      const u = users.find(x => x.sub === sub);
+      if (u) u.billing_status = value;
+    } catch (err) {
+      showRowMsg(cellEl.parentElement, err.message || "Could not save.", true);
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
+
+  async function saveTrialStart(sub, dateValue, btnEl, cellEl) {
+    const epochMs = dateInputValueToEpochMs(dateValue);
+    if (!epochMs) { showRowMsg(cellEl.parentElement, "Pick a date first.", true); return; }
+    btnEl.disabled = true;
+    try {
+      await callApi("adminUpdateUser", { sub, trial_start: epochMs });
+      showRowMsg(cellEl.parentElement, "Saved.", false);
+      const u = users.find(x => x.sub === sub);
+      if (u) u.trial_start = epochMs;
+    } catch (err) {
+      showRowMsg(cellEl.parentElement, err.message || "Could not save.", true);
+    } finally {
+      btnEl.disabled = false;
+    }
+  }
+
+  async function loadUsers() {
+    const loading = document.getElementById("loadingState");
+    const table = document.getElementById("usersTable");
+    const empty = document.getElementById("emptyState");
+    const listMsg = document.getElementById("listMsg");
+    loading.style.display = "block";
+    table.style.display = "none";
+    empty.style.display = "none";
+    try {
+      const data = await callApi("adminListUsers", {});
+      users = data.users || [];
+      renderUsers();
+    } catch (err) {
+      showMsg(listMsg, err.message || "Could not load users.", true);
+    } finally {
+      loading.style.display = "none";
+    }
+  }
+
+  async function createClient() {
+    const emailEl = document.getElementById("newEmail");
+    const statusEl = document.getElementById("newBillingStatus");
+    const trialEl = document.getElementById("newTrialStart");
+    const msgEl = document.getElementById("createMsg");
+    const btn = document.getElementById("createBtn");
+
+    const email = emailEl.value.trim();
+    if (!email) { showMsg(msgEl, "Enter an email first.", true); return; }
+
+    const payload = { email, billing_status: statusEl.value };
+    const epochMs = dateInputValueToEpochMs(trialEl.value);
+    if (epochMs) payload.trial_start = epochMs;
+
+    btn.disabled = true;
+    btn.textContent = "Creating…";
+    try {
+      await callApi("adminCreateUser", payload);
+      showMsg(msgEl, `Created ${email}. They'll get a password-reset email to set their own password.`, false);
+      emailEl.value = "";
+      await loadUsers();
+    } catch (err) {
+      showMsg(msgEl, err.message || "Could not create client.", true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create";
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────────────────
+  fillStatusSelect(document.getElementById("newBillingStatus"), "trialing");
+  document.getElementById("newTrialStart").valueAsDate = new Date();
+  loadUsers();
+</script>
+</body>
+</html>

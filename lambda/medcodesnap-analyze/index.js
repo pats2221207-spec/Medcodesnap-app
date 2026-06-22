@@ -2,6 +2,8 @@
 // Deploy behind API Gateway (REST API, Lambda Proxy integration) on:
 // POST /api/analyze → action:"analyze"
 // POST /api/analyze → action:"syncSheet"
+// POST /api/analyze → action:"adminListUsers" / "adminUpdateUser" / "adminCreateUser" (Phase 10, /admin — all three require
+//                      body.accessToken to belong to patty@medcodesnap.com, verified server-side via Cognito GetUser)
 // POST /api/analyze → Stripe webhook (detected via Stripe-Signature header, see 3.4)
 //
 // Required environment variables:
@@ -10,11 +12,23 @@
 // AZURE_OPENAI_DEPLOYMENT_NAME - Azure OpenAI deployment name (e.g. gpt-4o)
 // GOOGLE_SERVICE_ACCOUNT_JSON - Full JSON key for the Google service account
 // STRIPE_WEBHOOK_SECRET - Signing secret (whsec_...) from the Stripe webhook endpoint config
+// COGNITO_APP_CLIENT_ID - (optional) Cognito app client ID used for the adminCreateUser → ForgotPassword call; defaults to the same client /login already uses
+//
+// IAM: in addition to the DynamoDB + Cognito (AdminUpdateUserAttributes, ListUsers) permissions this
+// function already needed, the Phase 10 admin actions require the execution role to also be able to call
+// cognito-idp:GetUser, cognito-idp:AdminCreateUser, and cognito-idp:ForgotPassword on this user pool/app client.
 
 const crypto = require("crypto");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand } = require("@aws-sdk/lib-dynamodb");
-const { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand, ListUsersCommand } = require("@aws-sdk/client-cognito-identity-provider");
+const {
+CognitoIdentityProviderClient,
+AdminUpdateUserAttributesCommand,
+ListUsersCommand,
+GetUserCommand,
+AdminCreateUserCommand,
+ForgotPasswordCommand
+} = require("@aws-sdk/client-cognito-identity-provider");
 
 const CORS_HEADERS = {
 "Access-Control-Allow-Origin": "*",
@@ -39,6 +53,55 @@ const PENDING_SHEETS_TTL_SECONDS = 3600; // 1 hour
 const cognitoClient = new CognitoIdentityProviderClient({ region: process.env.AWS_REGION || "us-west-1" });
 const USER_POOL_ID = process.env.COGNITO_USER_POOL_ID || "us-west-1_vhYzjYK3K";
 const STRIPE_WEBHOOK_TOLERANCE_SECONDS = 300; // 5 minutes — matches Stripe's own default, guards against replay
+
+// ── Admin dashboard (Phase 10) ───────────────────────────────────────────────
+// Internal-only tooling at /admin so the site owner can manage users without
+// touching the Cognito console directly. Every action below is gated to this
+// one hardcoded address — there is no "admin role" attribute, just this check.
+const ADMIN_EMAIL = "patty@medcodesnap.com";
+
+// The public app client used by /login's own SignUp/ForgotPassword calls
+// (see login/index.html and index.html). adminCreateUser reuses this same
+// client to kick off the ForgotPassword flow for newly-created clients.
+const COGNITO_APP_CLIENT_ID = process.env.COGNITO_APP_CLIENT_ID || "3cst6juv3rbrn7b2h4efkfr3hj";
+
+// Allowed values for a manual custom:billing_status write from the admin
+// tools. "active" and "trialing" are the exact strings the rest of this app
+// already writes — "active" by activateBillingForSub() below (Stripe
+// webhook), "trialing" by index.html right after a public signup — reused
+// verbatim rather than inventing new spellings. "expired" and "canceled"
+// are net-new states for admins to manually flag accounts whose trial ran
+// out or who canceled outside Stripe. Importantly, none of these three
+// non-"active" values grant dashboard access by themselves — dashboard's
+// checkPaywall() (dashboard/index.html) only ever unlocks on the exact
+// string "active", so adding them doesn't change any existing gating.
+const ADMIN_BILLING_STATUSES = ["active", "trialing", "expired", "canceled"];
+
+// Confirms the caller of an admin-only action is genuinely signed in as
+// ADMIN_EMAIL. This resolves the caller's OWN Cognito access token via
+// GetUser — the same call dashboard/index.html already makes (see
+// fetchBillingState()) to read billing_status for the paywall — so it is
+// Cognito itself, not the request body, that says who the caller is. A
+// missing, expired, forged, or otherwise-invalid token, or a valid token
+// for any account other than ADMIN_EMAIL, returns false. Nothing in this
+// function trusts a claimed `email` field from the request body.
+async function verifyAdminCaller(accessToken) {
+if (!accessToken || typeof accessToken !== "string") return false;
+try {
+const data = await cognitoClient.send(new GetUserCommand({ AccessToken: accessToken }));
+const attrs = data.UserAttributes || [];
+const email = (attrs.find(a => a.Name === "email") || {}).Value || null;
+return email === ADMIN_EMAIL;
+} catch (err) {
+// Invalid/expired/revoked token, or any other GetUser failure — never
+// treat this as an authenticated admin.
+return false;
+}
+}
+
+function forbiddenAdminResponse() {
+return { statusCode: 403, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }, body: JSON.stringify({ error: "Forbidden" }) };
+}
 
 function getHeader(event, name) {
 const headers = event.headers || {};
@@ -300,6 +363,133 @@ const { sub } = body;
 if (!sub) return { statusCode: 400, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }, body: JSON.stringify({ error: "sub is required" }) };
 await ddb.send(new DeleteCommand({ TableName: PENDING_SHEETS_TABLE, Key: { sub } }));
 return { statusCode: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }, body: JSON.stringify({ success: true }) };
+}
+
+// ── action: adminListUsers ── list every signed-up user (Phase 10) ──────
+// Admin-only (verifyAdminCaller). Returns the fields the /admin table
+// needs: email, sub, current billing_status/trial_start, and signup date.
+if (action === "adminListUsers") {
+if (!(await verifyAdminCaller(body.accessToken))) return forbiddenAdminResponse();
+
+const users = [];
+let paginationToken;
+do {
+const page = await cognitoClient.send(new ListUsersCommand({
+UserPoolId: USER_POOL_ID,
+Limit: 60,
+PaginationToken: paginationToken
+}));
+for (const u of (page.Users || [])) {
+const attrs = u.Attributes || [];
+const getAttr = name => (attrs.find(a => a.Name === name) || {}).Value || null;
+users.push({
+sub: getAttr("sub"),
+email: getAttr("email"),
+billing_status: getAttr("custom:billing_status"),
+trial_start: getAttr("custom:trial_start"),
+created: u.UserCreateDate ? new Date(u.UserCreateDate).toISOString() : null
+});
+}
+paginationToken = page.PaginationToken;
+} while (paginationToken);
+
+return { statusCode: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" }, body: JSON.stringify({ users }) };
+}
+
+// ── action: adminUpdateUser ── manually set billing_status and/or
+// trial_start for one existing user (Phase 10). Admin-only.
+if (action === "adminUpdateUser") {
+if (!(await verifyAdminCaller(body.accessToken))) return forbiddenAdminResponse();
+
+const { sub, billing_status, trial_start } = body;
+const jsonHeaders = { ...CORS_HEADERS, "Content-Type": "application/json" };
+
+if (!sub || typeof sub !== "string") {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: "sub is required" }) };
+}
+if (billing_status === undefined && trial_start === undefined) {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: "Provide billing_status and/or trial_start" }) };
+}
+if (billing_status !== undefined && !ADMIN_BILLING_STATUSES.includes(billing_status)) {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: `billing_status must be one of: ${ADMIN_BILLING_STATUSES.join(", ")}` }) };
+}
+// trial_start is stored as an epoch-ms string — String(Date.now()), see
+// index.html's signup flow — NOT an ISO date string, even though an ISO
+// date is what a date picker naturally produces. The admin frontend is
+// responsible for converting the picked date to this format before
+// calling this action, so dashboard's existing checkPaywall() math
+// (parseInt(trial_start, 10) against Date.now()) keeps working unchanged.
+if (trial_start !== undefined && (typeof trial_start !== "string" || !/^\d+$/.test(trial_start))) {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: "trial_start must be an epoch-ms timestamp string (digits only)" }) };
+}
+
+const userAttributes = [];
+if (billing_status !== undefined) userAttributes.push({ Name: "custom:billing_status", Value: billing_status });
+if (trial_start !== undefined) userAttributes.push({ Name: "custom:trial_start", Value: trial_start });
+
+await cognitoClient.send(new AdminUpdateUserAttributesCommand({
+UserPoolId: USER_POOL_ID,
+Username: sub,
+UserAttributes: userAttributes
+}));
+
+return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ success: true }) };
+}
+
+// ── action: adminCreateUser ── manually add a new client (Phase 10) ─────
+// Admin-only. Creates the Cognito user without a temporary password and
+// without pre-verifying their email, then triggers the same ForgotPassword
+// flow /login's "Forgot password" modal already uses so the new client
+// receives a reset-code email and sets their own password on first login —
+// same self-service password step as a normal signup, just skipping the
+// public signup form. Cognito treats a successfully-used password-reset
+// code as proof of mailbox ownership, so this still amounts to a real
+// email-verification step, not a shortcut around one.
+if (action === "adminCreateUser") {
+if (!(await verifyAdminCaller(body.accessToken))) return forbiddenAdminResponse();
+
+const { email, billing_status, trial_start } = body;
+const jsonHeaders = { ...CORS_HEADERS, "Content-Type": "application/json" };
+
+if (!email || typeof email !== "string") {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: "email is required" }) };
+}
+if (billing_status !== undefined && !ADMIN_BILLING_STATUSES.includes(billing_status)) {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: `billing_status must be one of: ${ADMIN_BILLING_STATUSES.join(", ")}` }) };
+}
+if (trial_start !== undefined && (typeof trial_start !== "string" || !/^\d+$/.test(trial_start))) {
+return { statusCode: 400, headers: jsonHeaders, body: JSON.stringify({ error: "trial_start must be an epoch-ms timestamp string (digits only)" }) };
+}
+
+const userAttributes = [{ Name: "email", Value: email }];
+// Deliberately not setting email_verified — see comment above the
+// action block for why that's intentional, not an oversight.
+if (billing_status !== undefined) userAttributes.push({ Name: "custom:billing_status", Value: billing_status });
+if (trial_start !== undefined) userAttributes.push({ Name: "custom:trial_start", Value: trial_start });
+
+try {
+await cognitoClient.send(new AdminCreateUserCommand({
+UserPoolId: USER_POOL_ID,
+Username: email,
+UserAttributes: userAttributes,
+// No TemporaryPassword, and MessageAction:"SUPPRESS" so Cognito never
+// emails the auto-generated one — the ForgotPassword call right below
+// is the actual "set your password" path the user gets instead.
+MessageAction: "SUPPRESS"
+}));
+} catch (err) {
+if (err.name === "UsernameExistsException") {
+return { statusCode: 409, headers: jsonHeaders, body: JSON.stringify({ error: "A user with that email already exists" }) };
+}
+throw err;
+}
+
+await cognitoClient.send(new ForgotPasswordCommand({
+ClientId: COGNITO_APP_CLIENT_ID,
+Username: email
+}));
+
+return { statusCode: 200, headers: jsonHeaders, body: JSON.stringify({ success: true }) };
 }
 
 // ── action: getTabs ── return tab list for a sheet ──────────────────────
