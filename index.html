@@ -1106,6 +1106,19 @@ RTN 4 weeks or sooner if sx worsen.
         AuthParameters: { USERNAME: pendingSuEmail, PASSWORD: pendingSuPassword }
       });
       storeSession(auth.AuthenticationResult, pendingSuEmail);
+      // Start the 14-day free trial (3.4) — no credit card required.
+      // Best-effort: a failed write here shouldn't block the export the
+      // user is mid-flow on. The paywall logic on /dashboard treats a
+      // missing trial_start the same as "not yet expired" for this reason.
+      try {
+        await cognitoRequest("UpdateUserAttributes", {
+          AccessToken: auth.AuthenticationResult.AccessToken,
+          UserAttributes: [
+            { Name: "custom:trial_start", Value: String(Date.now()) },
+            { Name: "custom:billing_status", Value: "trialing" }
+          ]
+        });
+      } catch (e) { /* non-fatal, see comment above */ }
       gtag('event', 'trial_started', {event_category: 'engagement'});
       closeSuModal();
       const type = pendingExportType;
