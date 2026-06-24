@@ -372,7 +372,10 @@
       emailEl.value = "";
       await loadUsers();
     } catch (err) {
-      showMsg(msgEl, err.message || "Could not create client.", true);
+      const msg = err.status === 409
+        ? "This email is already registered."
+        : (err.message || "Could not create client.");
+      showMsg(msgEl, msg, true);
     } finally {
       btn.disabled = false;
       btn.textContent = "Create";
