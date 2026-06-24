@@ -726,6 +726,17 @@ async function fetchBillingState() {
 async function checkPaywall() {
   const { billingStatus, trialStart } = await fetchBillingState();
   if (billingStatus === "active") return true;
+  // Explicitly-terminated accounts are always blocked — the trial-window
+  // check below must never fire for these values, even if trial_start is
+  // recent. This must stay before the !trialStart / elapsed checks.
+  if (billingStatus === "expired" || billingStatus === "canceled") {
+    showPaywall("blocked");
+    return false;
+  }
+  // For "trialing", missing/blank, or any other non-terminal value: fall
+  // through to the 14-day trial window. Missing trial_start (accounts
+  // created before this feature) is treated as "not yet expired" — fail
+  // open rather than lock out existing users on a backfill gap.
   if (!trialStart) return true;
   const elapsedMs = Date.now() - parseInt(trialStart, 10);
   if (!Number.isFinite(elapsedMs) || elapsedMs < TRIAL_DAYS_MS) return true;

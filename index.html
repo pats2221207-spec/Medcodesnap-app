@@ -1090,7 +1090,12 @@ RTN 4 weeks or sooner if sx worsen.
       document.getElementById("suConfirmErr").classList.remove("show");
       setTimeout(() => document.getElementById("suCode").focus(), 100);
     } catch (err) {
-      errBox.textContent = err.message || "Could not create account. Please try again.";
+      if (err.type === "UsernameExistsException") {
+        // Show a safe hardcoded message — no user-supplied text in innerHTML.
+        errBox.innerHTML = 'An account with this email already exists. <a href="/login" style="color:inherit;font-weight:700;text-decoration:underline;">Try logging in instead.</a>';
+      } else {
+        errBox.textContent = err.message || "Could not create account. Please try again.";
+      }
       errBox.classList.add("show");
     } finally {
       btn.disabled = false; btn.textContent = "Create Account →";
